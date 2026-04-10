@@ -9,8 +9,9 @@ from ollama_workbench.memory import (
     session_clear,
     session_names_get,
     session_stats_get,
+    session_summarize,
     session_turns_get,
-    sessions_summary_get,
+    sessions_stats_get,
 )
 from ollama_workbench.runtime import (
     ollama_chat,
@@ -25,7 +26,7 @@ def prompt_run(user_prompt: str) -> None:
     ollama_ensure_running()
 
     payload = {
-        "model": CONFIG.model_name,
+        "model": CONFIG.chat_model_name,
         "stream": False,
         "messages": [
             {
@@ -47,7 +48,7 @@ def json_run() -> None:
     ollama_ensure_running()
 
     payload = {
-        "model": CONFIG.model_name,
+        "model": CONFIG.chat_model_name,
         "stream": False,
         "format": PING_SCHEMA,
         "messages": [
@@ -96,7 +97,7 @@ def tool_run(path: str) -> None:
 
     first = ollama_chat(
         {
-            "model": CONFIG.model_name,
+            "model": CONFIG.chat_model_name,
             "stream": False,
             "messages": messages,
             "tools": TOOL_DEFS,
@@ -168,7 +169,7 @@ def tool_run(path: str) -> None:
 
     final = ollama_chat(
         {
-            "model": CONFIG.model_name,
+            "model": CONFIG.chat_model_name,
             "stream": False,
             "messages": messages,
         }
@@ -196,7 +197,7 @@ def chat_run(user_prompt: str, session_name: str | None = None) -> None:
     messages.append({"role": "user", "content": user_prompt})
 
     payload = {
-        "model": CONFIG.model_name,
+        "model": CONFIG.chat_model_name,
         "stream": False,
         "messages": messages,
     }
@@ -241,33 +242,86 @@ def main() -> None:
 
     subparsers.add_parser("status", help="Show AI runtime status")
 
+    p_summarize = subparsers.add_parser("summarize", help="Summarize a session")
+    p_summarize.add_argument("--session", default=None)
+
     args = parser.parse_args()
 
-    if args.command == "prompt":
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Ollama Workbench local CLI")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    p_prompt = subparsers.add_parser("prompt", help="Run a plain prompt")
+    p_prompt.add_argument("text", help="Prompt text")
+
+    subparsers.add_parser("json", help="Run structured JSON test")
+
+    p_tool = subparsers.add_parser("tool", help="Run tool-calling test")
+    p_tool.add_argument("path", help="Path for directory_list tool")
+
+    p_chat = subparsers.add_parser("chat", help="Run chat with session memory")
+    p_chat.add_argument("text", help="Chat prompt text")
+    p_chat.add_argument("--session", default=None, help="Session name")
+
+    p_clear = subparsers.add_parser("clear", help="Clear session memory")
+    p_clear.add_argument("--session", default=None, help="Session name")
+
+    subparsers.add_parser("sessions", help="List sessions")
+
+    p_stats = subparsers.add_parser("stats", help="Show session stats")
+    p_stats.add_argument("--session", default=None, help="Session name")
+
+    subparsers.add_parser("status", help="Show AI runtime status")
+
+    p_summarize = subparsers.add_parser("summarize", help="Summarize a session")
+    p_summarize.add_argument("--session", default=None, help="Session name")
+
+    args = parser.parse_args()
+
+    command = args.command
+
+    if command == "prompt":
         prompt_run(args.text)
-    elif args.command == "json":
+        return
+
+    if command == "json":
         json_run()
-    elif args.command == "tool":
+        return
+
+    if command == "tool":
         tool_run(args.path)
-    elif args.command == "chat":
+        return
+
+    if command == "chat":
         chat_run(args.text, args.session)
-    elif args.command == "clear":
+        return
+
+    if command == "clear":
         clear_run(args.session)
-    elif args.command == "sessions":
-        names = session_names_get()
-        for n in names:
-            print(n)
-    elif args.command == "stats":
+        return
+
+    if command == "sessions":
+        for name in session_names_get():
+            print(name)
+        return
+
+    if command == "stats":
         if args.session:
-            stats = session_stats_get(args.session)
-            print(json.dumps(stats, indent=2))
+            print(json.dumps(session_stats_get(args.session), indent=2))
         else:
-            summaries = sessions_summary_get()
-            print(json.dumps(summaries, indent=2))
-    elif args.command == "status":
+            print(json.dumps(sessions_stats_get(), indent=2))
+        return
+
+    if command == "status":
         ai_status_show()
-    else:
-        raise RuntimeError(f"Unknown command: {args.command}")
+        return
+
+    if command == "summarize":
+        session_summarize(args.session)
+        print("[✓] Session summarized")
+        return
+
+    raise RuntimeError(f"Unknown command: {command}")
 
 if __name__ == "__main__":
     main()

@@ -9,8 +9,10 @@ class AppConfig:
     app_name: str = "ollama_workbench"
 
     ollama_base_url: str = "http://127.0.0.1:11434"
-    model_name: str = "qwen2.5-coder:3b"
     request_timeout_s: int = 120
+
+    lightweight_model_name: str = "phi3:mini"
+    large_model_name: str = "qwen2.5-coder:3b"
 
     scripts_dir: Path = Path.home() / "scripts"
     ai_start_script: Path = scripts_dir / "ai_start.sh"
@@ -21,6 +23,14 @@ class AppConfig:
 
     default_session_name: str = "default"
     memory_turn_limit: int = 8
+
+    chat_model_name: str = large_model_name
+    summary_model_name: str = lightweight_model_name
+
+    summary_keep_recent_messages: int = 8
+    summary_max_input_messages: int = 12
+    summary_inactive_minutes: int = 30
+    summary_max_input_chars: int = 600 
 
 
 CONFIG = AppConfig()
