@@ -37,26 +37,46 @@ next up - project docs
 
 finish phase 1
 [x] initialize git cleanly
-[ ] create first commit for ollama_workbench v2 phase 1
-[ ] push to github
+[x] create first commit for ollama_workbench v2 phase 1
+[x] push to github
 
-v2 phase 2 - session storage cleanup
-[ ] centralize path handling
-[ ] set repo root separate from runtime data root
-[ ] set default runtime data root to ~/ai/data/ollama_workbench
-[ ] define session file object format
-[ ] change session storage from raw message list to session object
-[ ] preserve backward compatibility for current session files if practical
-[ ] smoke test load/save/clear/sessions/stats
+v2 phase 2 - session format baseline
+
+done earlier
+[x] centralize path handling
+[x] set repo root separate from runtime data root
+[x] set default runtime data root to ~/ai/data/ollama_workbench
+
+current phase
+[x] define session file object format
+[x] change session storage from raw message list to session object
+[x] preserve backward compatibility for current session files if practical
+[x] smoke test load/save/clear/sessions/stats
+
+summaries
+[x] add manual summarize action
+[x] add automatic summarize policy for long-running chats
+[ ] add overnight summarize mode
+[ ] define when summaries run automatically vs only by request
+
+storage
 [ ] prepare for later move to /mnt/data
+[ ] add migration path for storage move if needed
+
+v2 cleanup
+[ ] clean malformed legacy session file content (for example `}[`)
+[ ] decide whether to add explicit migrate/fix command for old session files
+[ ] clean up runtime.py / runtime main flow
+[ ] decide whether missing models should auto-pull or fail with guidance
+[ ] pass model name into ollama_generate so summarize can use summary_model_name correctly
 
 v2 phase 3 - summaries
-[ ] define simple summary format
-[ ] add manual summarize command
-[ ] store summary inside session file
-[ ] keep recent raw messages plus summary
+[x] define simple summary format
+[x] add manual summarize command
+[x] store summary inside session file
+[x] keep recent raw messages plus summary
 [ ] define simple thresholds for later auto-summary
-[ ] verify inspectable and bounded memory behavior
+[x] verify inspectable and bounded memory behavior
 
 v2 phase 4 - storage move
 [ ] add config for data_root / sessions_dir
@@ -128,3 +148,5 @@ future ui
 integration
 [ ] decide later how ollama_workbench may integrate with manumental-effort
 [ ] keep integration at boundary, not shared mess
+to be prioritized (tbp)
+
