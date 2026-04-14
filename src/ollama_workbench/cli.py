@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from typing import Callable
 
 from ollama_workbench.config import CONFIG
 from ollama_workbench.memory import (
@@ -14,9 +15,9 @@ from ollama_workbench.memory import (
     sessions_stats_get,
 )
 from ollama_workbench.runtime import (
+    ai_status_show,
     ollama_chat,
     ollama_ensure_running,
-    ai_status_show,
 )
 from ollama_workbench.schemas import PING_SCHEMA
 from ollama_workbench.tools import TOOL_DEFS, TOOL_REGISTRY
@@ -216,38 +217,65 @@ def clear_run(session_name: str | None = None) -> None:
     print("[✓] Session cleared")
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Ollama Workbench local CLI")
-    subparsers = parser.add_subparsers(dest="command", required=True)
+def prompt_command_run(args: argparse.Namespace) -> None:
+    prompt_run(args.text)
 
-    p_prompt = subparsers.add_parser("prompt", help="Run a plain prompt")
-    p_prompt.add_argument("text", help="Prompt text")
 
-    subparsers.add_parser("json", help="Run structured JSON test")
+def json_command_run(args: argparse.Namespace) -> None:
+    json_run()
 
-    p_tool = subparsers.add_parser("tool", help="Run tool-calling test")
-    p_tool.add_argument("path", help="Path for directory_list tool")
 
-    p_chat = subparsers.add_parser("chat", help="Run chat with session memory")
-    p_chat.add_argument("text", help="Chat prompt text")
-    p_chat.add_argument("--session", default=None, help="Session name")
+def tool_command_run(args: argparse.Namespace) -> None:
+    tool_run(args.path)
 
-    p_clear = subparsers.add_parser("clear", help="Clear session memory")
-    p_clear.add_argument("--session", default=None, help="Session name")
 
-    subparsers.add_parser("sessions", help="List sessions")
+def chat_command_run(args: argparse.Namespace) -> None:
+    chat_run(args.text, args.session)
 
-    p_stats = subparsers.add_parser("stats", help="Show session stats")
-    p_stats.add_argument("--session", default=None)
 
-    subparsers.add_parser("status", help="Show AI runtime status")
+def clear_command_run(args: argparse.Namespace) -> None:
+    clear_run(args.session)
 
-    p_summarize = subparsers.add_parser("summarize", help="Summarize a session")
-    p_summarize.add_argument("--session", default=None)
 
-    args = parser.parse_args()
+def sessions_command_run(args: argparse.Namespace) -> None:
+    del args
+    for name in session_names_get():
+        print(name)
 
-def main() -> None:
+
+def stats_command_run(args: argparse.Namespace) -> None:
+    if args.session:
+        print(json.dumps(session_stats_get(args.session), indent=2))
+        return
+
+    print(json.dumps(sessions_stats_get(), indent=2))
+
+
+def status_command_run(args: argparse.Namespace) -> None:
+    del args
+    ai_status_show()
+
+
+def summarize_command_run(args: argparse.Namespace) -> None:
+    session_name = args.session or CONFIG.default_session_name
+    session_summarize(session_name)
+    print("[✓] Session summarized")
+
+
+COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
+    "prompt": prompt_command_run,
+    "json": json_command_run,
+    "tool": tool_command_run,
+    "chat": chat_command_run,
+    "clear": clear_command_run,
+    "sessions": sessions_command_run,
+    "stats": stats_command_run,
+    "status": status_command_run,
+    "summarize": summarize_command_run,
+}
+
+
+def parser_build() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Ollama Workbench local CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -276,52 +304,21 @@ def main() -> None:
     p_summarize = subparsers.add_parser("summarize", help="Summarize a session")
     p_summarize.add_argument("--session", default=None, help="Session name")
 
+    return parser
+
+
+def main() -> None:
+    parser = parser_build()
     args = parser.parse_args()
 
     command = args.command
+    handler = COMMAND_HANDLERS.get(command)
 
-    if command == "prompt":
-        prompt_run(args.text)
-        return
+    if handler is None:
+        raise RuntimeError(f"Unknown command: {command}")
 
-    if command == "json":
-        json_run()
-        return
+    handler(args)
 
-    if command == "tool":
-        tool_run(args.path)
-        return
-
-    if command == "chat":
-        chat_run(args.text, args.session)
-        return
-
-    if command == "clear":
-        clear_run(args.session)
-        return
-
-    if command == "sessions":
-        for name in session_names_get():
-            print(name)
-        return
-
-    if command == "stats":
-        if args.session:
-            print(json.dumps(session_stats_get(args.session), indent=2))
-        else:
-            print(json.dumps(sessions_stats_get(), indent=2))
-        return
-
-    if command == "status":
-        ai_status_show()
-        return
-
-    if command == "summarize":
-        session_summarize(args.session)
-        print("[✓] Session summarized")
-        return
-
-    raise RuntimeError(f"Unknown command: {command}")
 
 if __name__ == "__main__":
     main()
