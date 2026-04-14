@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
+import json
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Any
 
@@ -80,10 +81,16 @@ def session_load(session_name: str | None = None) -> dict[str, Any]:
         return session_empty_get(session_name)
 
     with path.open("r", encoding="utf-8") as fh:
-        raw = json.load(fh)
+        try:
+            raw = json.load(fh)
+        except JSONDecodeError as exc:
+            raise RuntimeError(
+                f"Session file '{path}' is malformed JSON. "
+                "This likely came from a legacy file shape or interrupted write. "
+                "Fix or delete the file."
+            ) from exc
 
     return session_normalize(raw, session_name)
-
 
 def session_save(
     session_data: dict[str, Any],
@@ -224,10 +231,8 @@ def session_summarize(session_name: str) -> None:
         role = m.get("role", "unknown")
         content = m.get("content", "")
         if isinstance(content, str):
-            #lines.append(f"{role}: {content}")
             lines.append(content)
 
-    #summary_input = "\n".join(lines)
     summary_input = "\n\n".join(lines[-6:])
 
     max_chars = CONFIG.summary_max_input_chars
