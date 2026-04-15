@@ -8,6 +8,7 @@ import urllib.request
 from typing import Any
 
 from ollama_workbench.config import CONFIG
+from ollama_workbench.paths import paths_get
 
 
 def _ollama_get(path: str) -> dict[str, Any]:
@@ -73,17 +74,19 @@ def ollama_is_healthy() -> bool:
 
 
 def ai_stack_start() -> None:
+    script_path = paths_get().ai_start_script
     subprocess.run(
-        [str(CONFIG.ai_start_script)],
+        [str(script_path)],
         check=True,
         text=True,
     )
 
 
 def ai_status_show() -> None:
+    script_path = paths_get().ai_status_script
     subprocess.run(
-        [str(CONFIG.ai_status_script)],
-        check=False,
+        [str(script_path)],
+        check=True,
         text=True,
     )
 

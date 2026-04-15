@@ -14,9 +14,8 @@ class AppConfig:
     lightweight_model_name: str = "phi3:mini"
     large_model_name: str = "qwen2.5-coder:3b"
 
-    scripts_dir: Path = Path.home() / "scripts"
-    ai_start_script: Path = scripts_dir / "ai_start.sh"
-    ai_status_script: Path = scripts_dir / "ai_status.sh"
+    ai_start_script_name: str = "ai_start.sh"
+    ai_status_script_name: str = "ai_status.sh"
 
     ai_root: Path = Path.home() / "ai"
     data_root: Path = ai_root / "data"

@@ -255,11 +255,6 @@ def stats_command_run(args: argparse.Namespace) -> None:
     print(json.dumps(sessions_stats_get(), indent=2))
 
 
-def status_command_run(args: argparse.Namespace) -> None:
-    del args
-    ai_status_show()
-
-
 def summarize_command_run(args: argparse.Namespace) -> None:
     session_name = args.session or CONFIG.default_session_name
     session_summarize(session_name)
