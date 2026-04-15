@@ -25,6 +25,7 @@ from ollama_workbench.runtime import (
 )
 from ollama_workbench.schemas import PING_SCHEMA
 from ollama_workbench.tools import TOOL_DEFS, TOOL_REGISTRY
+from ollama_workbench.web import web_fetch, web_artifact_load, web_cleanup
 
 
 def prompt_run(user_prompt: str) -> None:
@@ -352,6 +353,77 @@ def doctor_command_run(args: argparse.Namespace) -> None:
         raise RuntimeError(f"doctor found {failures} failing check(s)")
 
 
+def web_fetch_command_run(args: argparse.Namespace) -> None:
+    artifact = web_fetch(args.url)
+
+    print(f"url: {artifact['url']}")
+    print(f"fetched_at: {artifact['fetched_at']}")
+    print(f"title: {artifact.get('title') or '(none)'}")
+    print(f"artifact_path: {artifact['artifact_path']}")
+    print()
+
+    content_text = artifact.get("content_text", "")
+    preview = content_text[:500]
+    if len(content_text) > 500:
+        preview += "..."
+
+    print(preview)
+
+
+def web_chat_command_run(args: argparse.Namespace) -> None:
+    artifact = web_fetch(args.url)
+    content_text = artifact.get("content_text", "")
+
+    prompt = (
+        f"Question: {args.question}\n\n"
+        f"URL: {artifact['url']}\n"
+        f"Title: {artifact.get('title') or '(none)'}\n\n"
+        f"Page content:\n{content_text}"
+    )
+
+    ollama_ensure_running()
+
+    payload = {
+        "model": CONFIG.chat_model_name,
+        "stream": False,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "Answer the user's question using only the provided web page content. "
+                    "Be concise and say when the page does not contain enough information."
+                ),
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ],
+    }
+
+    result = ollama_chat(payload)
+    answer = result["message"]["content"]
+
+    print(f"url: {artifact['url']}")
+    print(f"artifact_path: {artifact['artifact_path']}")
+    print()
+    print(answer)
+
+
+def web_cleanup_command_run(args: argparse.Namespace) -> None:
+    removed = web_cleanup(args.days, args.delete)
+
+    if not removed:
+        print("No old web artifacts found.")
+        return
+
+    action = "Deleting" if args.delete else "Would delete"
+    print(f"{action} {len(removed)} artifact(s):")
+
+    for path in removed:
+        print(f"  {path}")
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -363,6 +435,9 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "status": status_command_run,
     "summarize": summarize_command_run,
     "doctor": doctor_command_run,
+    "web-fetch": web_fetch_command_run,
+    "web-chat": web_chat_command_run,
+    "web-cleanup": web_cleanup_command_run,
 }
 
 
@@ -377,6 +452,7 @@ def parser_build() -> argparse.ArgumentParser:
 
     p_tool = subparsers.add_parser("tool", help="Run tool-calling test")
     p_tool.add_argument("path", help="Path for directory_list tool")
+
 
     p_chat = subparsers.add_parser("chat", help="Run chat with session memory")
     p_chat.add_argument("text", help="Chat prompt text")
@@ -396,6 +472,35 @@ def parser_build() -> argparse.ArgumentParser:
     p_summarize.add_argument("--session", default=None, help="Session name")
 
     subparsers.add_parser("doctor", help="Run local runtime checks")
+
+    p_web_fetch = subparsers.add_parser(
+        "web-fetch",
+        help="Fetch one explicit URL and save a web artifact",
+    )
+    p_web_fetch.add_argument("url", help="URL to fetch")
+
+    p_web_chat = subparsers.add_parser(
+        "web-chat",
+        help="Answer a question using one explicit fetched URL",
+    )
+    p_web_chat.add_argument("question", help="Question to answer")
+    p_web_chat.add_argument("--url", required=True, help="URL to fetch and use")
+
+    p_web_cleanup = subparsers.add_parser(
+        "web-cleanup",
+        help="Clean up old web artifacts",
+    )
+    p_web_cleanup.add_argument(
+        "--days",
+        type=int,
+        default=7,
+        help="Remove artifacts older than N days (default: 7)",
+    )
+    p_web_cleanup.add_argument(
+        "--delete",
+        action="store_true",
+        help="Actually delete files (default: dry run)",
+    )
 
     return parser
 

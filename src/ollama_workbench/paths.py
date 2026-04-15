@@ -18,6 +18,7 @@ class AppPaths:
     data_root: Path
     app_data_root: Path
     sessions_dir: Path
+    web_dir: Path
 
 
 def paths_get() -> AppPaths:
@@ -34,6 +35,8 @@ def paths_get() -> AppPaths:
     ai_start_script = scripts_dir / CONFIG.ai_start_script_name
     ai_status_script = scripts_dir / CONFIG.ai_status_script_name
 
+    web_dir = app_data_root / "web"
+
     return AppPaths(
         repo_root=repo_root,
         src_root=src_root,
@@ -45,4 +48,5 @@ def paths_get() -> AppPaths:
         data_root=data_root,
         app_data_root=app_data_root,
         sessions_dir=sessions_dir,
+        web_dir=web_dir,
     )
