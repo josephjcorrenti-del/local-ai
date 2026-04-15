@@ -5,20 +5,68 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from typing import Any
 
 from ollama_workbench.config import CONFIG
 
 
-def ollama_version_get() -> dict[str, object]:
-    url = f"{CONFIG.ollama_base_url}/api/version"
+def _ollama_get(path: str) -> dict[str, Any]:
+    url = f"{CONFIG.ollama_base_url}{path}"
     req = urllib.request.Request(url, method="GET")
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+
+    try:
+        with urllib.request.urlopen(req, timeout=CONFIG.request_timeout_s) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Ollama HTTP error {exc.code}: {body}") from exc
+
+
+def _ollama_post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
+    url = f"{CONFIG.ollama_base_url}{path}"
+    data = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=CONFIG.request_timeout_s) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Ollama HTTP error {exc.code}: {body}") from exc
+
+
+def ollama_version_get() -> dict[str, Any]:
+    return _ollama_get("/api/version")
+
+
+def ollama_models_get() -> list[str]:
+    result = _ollama_get("/api/tags")
+    models = result.get("models", [])
+
+    if not isinstance(models, list):
+        return []
+
+    names: list[str] = []
+    for model in models:
+        if not isinstance(model, dict):
+            continue
+
+        name = model.get("name")
+        if isinstance(name, str):
+            names.append(name)
+
+    return names
 
 
 def ollama_is_healthy() -> bool:
     try:
-        _ = ollama_version_get()
+        ollama_version_get()
         return True
     except Exception:
         return False
@@ -56,45 +104,39 @@ def ollama_ensure_running() -> None:
     raise RuntimeError("Ollama did not become healthy after startup")
 
 
-def ollama_chat(payload: dict[str, object]) -> dict[str, object]:
-    url = f"{CONFIG.ollama_base_url}/api/chat"
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json"},
-        method="POST",
+def ollama_model_ensure_available(model_name: str) -> None:
+    available_models = ollama_models_get()
+
+    if model_name in available_models:
+        return
+
+    raise RuntimeError(
+        f"Configured model '{model_name}' is not available in local Ollama. "
+        f"Pull it explicitly with: ollama pull {model_name}"
     )
-    try:
-        with urllib.request.urlopen(req, timeout=CONFIG.request_timeout_s) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Ollama HTTP error {exc.code}: {body}") from exc
 
 
-def ollama_generate(prompt: str) -> str:
-    url = f"{CONFIG.ollama_base_url}/api/generate"
+def ollama_chat(payload: dict[str, Any]) -> dict[str, Any]:
+    model_name = payload.get("model")
 
+    if isinstance(model_name, str):
+        ollama_model_ensure_available(model_name)
+
+    return _ollama_post("/api/chat", payload)
+
+
+def ollama_generate(prompt: str, model_name: str | None = None) -> str:
+    model = model_name or CONFIG.chat_model_name
     payload = {
-        "model": CONFIG.chat_model_name,
+        "model": model,
         "prompt": prompt,
         "stream": False,
     }
 
-    data = json.dumps(payload).encode("utf-8")
+    result = _ollama_post("/api/generate", payload)
+    response = result.get("response", "")
 
-    req = urllib.request.Request(
-        url,
-        data=data,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    if not isinstance(response, str):
+        return ""
 
-    try:
-        with urllib.request.urlopen(req, timeout=CONFIG.request_timeout_s) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
-            return result.get("response", "")
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Ollama HTTP error {exc.code}: {body}") from exc
+    return response

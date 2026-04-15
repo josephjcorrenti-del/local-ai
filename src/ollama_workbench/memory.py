@@ -261,7 +261,10 @@ def session_summarize(session_name: str) -> None:
     prompt = f"Summarize the following text briefly:\n\n{summary_input}"
 
     try:
-        summary_text = ollama_generate(prompt)
+        summary_text = ollama_generate(
+            prompt,
+            model_name=CONFIG.summary_model_name,
+        )
     except RuntimeError as exc:
         raise RuntimeError(
             f"Session summarize failed for '{session_name}'. "
