@@ -1,0 +1,9 @@
+PYTHONPATH=src python3 -m ollama_workbench.cli sessions
+PYTHONPATH=src python3 -m ollama_workbench.cli stats
+PYTHONPATH=src python3 -m ollama_workbench.cli chat "test"
+PYTHONPATH=src python3 -m ollama_workbench.cli summarize --session scratch
+PYTHONPATH=src python3 -m ollama_workbench.cli status
+PYTHONPATH=src python3 -m ollama_workbench.cli doctor
+PYTHONPATH=src python3 -m ollama_workbench.cli web-fetch https://example.com
+PYTHONPATH=src python3 -m ollama_workbench.cli web-chat "test" --url https://example.com
+PYTHONPATH=src python3 -m ollama_workbench.cli web-cleanup --days 7

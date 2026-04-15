@@ -55,20 +55,16 @@ current phase
 
 summaries
 [x] add manual summarize action
-[x] add automatic summarize policy for long-running chats
+[x] define summarize policy for long-running chats
+[x] define when summaries run automatically vs only by request
 [ ] add overnight summarize mode
 [ ] define when summaries run automatically vs only by request
 
-storage
-[ ] prepare for later move to /mnt/data
-[ ] add migration path for storage move if needed
-
 v2 cleanup
-[ ] clean malformed legacy session file content (for example `}[`)
-[ ] decide whether to add explicit migrate/fix command for old session files
-[ ] clean up runtime.py / runtime main flow
-[ ] decide whether missing models should auto-pull or fail with guidance
-[ ] pass model name into ollama_generate so summarize can use summary_model_name correctly
+[x] detect malformed session JSON and fail with explicit error
+[x] clean up runtime.py / runtime main flow
+[x] decide whether missing models should auto-pull or fail with guidance
+[x] pass model name into ollama_generate so summarize can use summary_model_name correctly
 
 v2 phase 3 - summaries
 [x] define simple summary format
@@ -78,57 +74,34 @@ v2 phase 3 - summaries
 [ ] define simple thresholds for later auto-summary
 [x] verify inspectable and bounded memory behavior
 
-v2 phase 4 - storage move
-[ ] add config for data_root / sessions_dir
-[ ] set target path to /mnt/data/ai/ollama_workbench
-[ ] add migrate-sessions command
-[ ] verify migrated sessions load correctly
-[ ] keep move explicit and inspectable
-
 v2 phase 5 - explicit runtime tooling
-[ ] add status command
-[ ] add doctor / smoke command
-[ ] show ollama status
-[ ] show configured model
-[ ] show session/data path
-[ ] verify helper script integration stays explicit
+[x] make status command useful and explicit
+[x] add doctor / smoke command
+[x] show ollama status
+[x] show configured model
+[x] show session/data path
+[x] bring AI helper scripts under repo control
+[x] verify helper script integration stays explicit
 
 v2 phase 6 - explicit web access
-[ ] define web access as separate command/tool
-[ ] keep web use opt-in and visible
-[ ] define output format for saved web results
-[ ] avoid hidden web behavior in normal chat flow
+[x] define web access as separate commands/tools
+[x] keep web use opt-in and visible
+[x] define saved artifact shape for fetched web content
+[x] define storage location for fetched web artifacts
+[x] implement web-fetch for a single explicit URL
+[x] implement minimal web-chat over one explicit fetched artifact
+[x] avoid hidden web behavior in normal chat flow
+[x] add cleanup path for old web artifacts
+
+v2 cleanup final
+[x] remove obvious dead/commented code after active phase work
+[x] do final docs + todo consistency pass
+[x] do final smoke pass across active commands
 
 to be prioritized (tbp)
 
-session model
-[ ] change session storage from raw message list to session object
-[ ] preserve backward compatibility for current session files if practical
-[ ] add session-level metadata
-[ ] add summary field to session file shape
-
 memory / summaries
-[ ] define simple summary format
-[ ] add manual summarize command
-[ ] keep recent raw messages plus summary
 [ ] define simple thresholds for later auto-summary
-
-runtime / tooling
-[ ] add status command
-[ ] add doctor / smoke command
-[ ] show ollama status
-[ ] show configured model
-[ ] show session/data path
-
-storage
-[ ] add config for data_root / sessions_dir overrides
-[ ] prepare move to /mnt/data/ai/ollama_workbench
-[ ] add migrate-sessions command
-
-web access
-[ ] define explicit web access as separate command/tool
-[ ] keep web use opt-in and visible
-[ ] define saved output format for web results
 
 packaging / release
 [ ] add console script entry point
@@ -137,7 +110,6 @@ packaging / release
 
 quality
 [ ] add basic tests
-[ ] add smoke test script
 [ ] add sample config
 
 future ui
@@ -148,5 +120,34 @@ future ui
 integration
 [ ] decide later how ollama_workbench may integrate with manumental-effort
 [ ] keep integration at boundary, not shared mess
-to be prioritized (tbp)
 
+storage / archive (future)
+[ ] revisit separate storage only if chat JSONs need archiving or cold storage.  (removed storage from current flow)
+[ ] revisit separate storage only if old web artifacts need archiving or cold storage.
+
+more robust jsons
+[ ] catch runtime errors in CLI and show clean user-facing error
+[ ] preserve detailed exception context for debug/developer mode
+[ ] add --debug flag for full traceback output
+[ ] add doctor command checks for malformed session files
+[ ] add explicit repair/migrate command for session files
+[ ] isolate bad session files during aggregate commands (for example stats) and continue showing valid sessions
+
+flexible code 
+[ ] encoding="utf-8"
+
+containers
+[ ] containerize ollama_workbench
+[ ] make helper script handling container-friendly
+
+readability/traceability
+[ ] logs (elk compatible)
+[ ] comments
+[ ] error handling
+
+web search
+[ ] add web-search by query
+[ ] support multi-source web-chat
+[ ] add richer extraction/cleaning strategies for fetched pages
+[ ] revisit storage/archive strategy for old chats and old web artifacts
+[ ] make helper script handling container-friendly

@@ -53,22 +53,10 @@
   - `messages`
 - Backward compatibility with older list-based session files should be preserved when practical.
 
-## Summaries
+## Web access
 
-- Summary shape should be:
-
-  ```json
-  {
-    "text": "...",
-    "updated_at": "...",
-    "source_message_count": 0
-  }
-
-## Current practical run mode
-
-- From `src/`, this works:
-  `python3 -m ollama_workbench.cli ...`
-- From repo root, use:
-  `PYTHONPATH=src python3 -m ollama_workbench.cli ...`
-- A cleaner installed entry point can be added later.
-
+- Web access should remain explicit and opt-in.
+- Normal chat flow must not browse the web implicitly.
+- Web operations should use separate commands/tools.
+- Fetched web content should be saved as inspectable artifacts under the app data root.
+- AI reasoning over web content should operate on explicit fetched artifacts.
