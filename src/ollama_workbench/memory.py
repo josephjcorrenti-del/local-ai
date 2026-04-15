@@ -242,22 +242,6 @@ def session_summarize(session_name: str) -> None:
     # Use ollama to generate summary
     ollama_ensure_running()
 
-    payload: dict[str, object] = {
-        "model": CONFIG.summary_model_name,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "Summarize the following text briefly."
-    ),
-            },
-            {
-                "role": "user",
-                "content": summary_input,
-            },
-        ],
-    }
-
     prompt = f"Summarize the following text briefly:\n\n{summary_input}"
 
     try:
