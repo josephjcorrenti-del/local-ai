@@ -127,6 +127,7 @@ def ollama_chat(payload: dict[str, Any]) -> dict[str, Any]:
 
 def ollama_generate(prompt: str, model_name: str | None = None) -> str:
     model = model_name or CONFIG.chat_model_name
+    ollama_model_ensure_available(model)
     payload = {
         "model": model,
         "prompt": prompt,
