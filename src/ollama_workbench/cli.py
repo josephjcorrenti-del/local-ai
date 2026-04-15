@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from typing import Callable
+import sys
 
 from ollama_workbench.config import CONFIG
 from ollama_workbench.memory import (
@@ -14,10 +15,13 @@ from ollama_workbench.memory import (
     session_turns_get,
     sessions_stats_get,
 )
+from ollama_workbench.paths import paths_get
 from ollama_workbench.runtime import (
     ai_status_show,
     ollama_chat,
     ollama_ensure_running,
+    ollama_is_healthy,
+    ollama_model_ensure_available,
 )
 from ollama_workbench.schemas import PING_SCHEMA
 from ollama_workbench.tools import TOOL_DEFS, TOOL_REGISTRY
@@ -262,6 +266,97 @@ def summarize_command_run(args: argparse.Namespace) -> None:
     print("[✓] Session summarized")
 
 
+def status_command_run(args: argparse.Namespace) -> None:
+    del args
+
+    paths = paths_get()
+
+    print(f"app: {CONFIG.app_name}")
+    print()
+
+    print("runtime:")
+    print(f"  ollama_base_url: {CONFIG.ollama_base_url}")
+    print(f"  ollama_healthy: {'yes' if ollama_is_healthy() else 'no'}")
+    print(f"  chat_model: {CONFIG.chat_model_name}")
+    print(f"  summary_model: {CONFIG.summary_model_name}")
+    print()
+
+    print("paths:")
+    print(f"  repo_root: {paths.repo_root}")
+    print(f"  app_data_root: {paths.app_data_root}")
+    print(f"  sessions_dir: {paths.sessions_dir}")
+    print()
+
+    print("system:")
+    ai_status_show()
+
+
+USE_COLOR = sys.stdout.isatty()
+
+
+def _green(text: str) -> str:
+    if not USE_COLOR:
+        return text
+    return f"\033[32m{text}\033[0m"
+
+
+def _red(text: str) -> str:
+    if not USE_COLOR:
+        return text
+    return f"\033[31m{text}\033[0m"
+
+
+def _doctor_ok(message: str) -> None:
+    print(f"{_green('[✓]')} {message}")
+
+
+def _doctor_fail(message: str) -> None:
+    print(f"{_red('[✗]')} {message}")
+
+
+def doctor_command_run(args: argparse.Namespace) -> None:
+    del args
+
+    paths = paths_get()
+    failures = 0
+
+    if ollama_is_healthy():
+        _doctor_ok("ollama reachable")
+    else:
+        _doctor_fail("ollama not reachable")
+        failures += 1
+
+    try:
+        ollama_model_ensure_available(CONFIG.chat_model_name)
+        _doctor_ok(f"chat model available ({CONFIG.chat_model_name})")
+    except RuntimeError:
+        _doctor_fail(f"chat model missing ({CONFIG.chat_model_name})")
+        print(f"    run: ollama pull {CONFIG.chat_model_name}")
+        failures += 1
+
+    try:
+        ollama_model_ensure_available(CONFIG.summary_model_name)
+        _doctor_ok(f"summary model available ({CONFIG.summary_model_name})")
+    except RuntimeError:
+        _doctor_fail(f"summary model missing ({CONFIG.summary_model_name})")
+        print(f"    run: ollama pull {CONFIG.summary_model_name}")
+        failures += 1
+
+    try:
+        paths.sessions_dir.mkdir(parents=True, exist_ok=True)
+        test_path = paths.sessions_dir / ".doctor_write_test"
+        test_path.write_text("ok\n", encoding="utf-8")
+        test_path.unlink()
+        _doctor_ok(f"sessions dir writable ({paths.sessions_dir})")
+    except OSError as exc:
+        _doctor_fail(f"sessions dir not writable ({paths.sessions_dir})")
+        print(f"    reason: {exc}")
+        failures += 1
+
+    if failures:
+        raise RuntimeError(f"doctor found {failures} failing check(s)")
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -272,6 +367,7 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "stats": stats_command_run,
     "status": status_command_run,
     "summarize": summarize_command_run,
+    "doctor": doctor_command_run,
 }
 
 
@@ -303,6 +399,8 @@ def parser_build() -> argparse.ArgumentParser:
 
     p_summarize = subparsers.add_parser("summarize", help="Summarize a session")
     p_summarize.add_argument("--session", default=None, help="Session name")
+
+    subparsers.add_parser("doctor", help="Run local runtime checks")
 
     return parser
 
