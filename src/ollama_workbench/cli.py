@@ -1,11 +1,33 @@
 from __future__ import annotations
 
+"""
+ollama_workbench/cli.py
+
+Primary CLI entrypoint and command router.
+
+Responsibilities:
+- Define CLI commands and argument parsing (argparse)
+- Route commands to small handler functions
+- Keep handlers thin and explicit (no hidden behavior)
+- Coordinate between runtime, memory, tools, and web modules
+- Emit command-level logging (start / end / error)
+
+Design notes:
+- CLI is intentionally "flat": each command maps to one handler
+- Business logic lives in other modules (runtime, memory, web)
+- Output is a mix of:
+  - human-readable CLI output (print)
+  - machine-readable logs (log_event)
+- No background behavior: all actions are explicit per command
+"""
+
 import argparse
 import json
 from typing import Callable
 import sys
 
 from ollama_workbench.config import CONFIG
+from ollama_workbench.log import log_event
 from ollama_workbench.memory import (
     session_append,
     session_clear,
@@ -29,6 +51,7 @@ from ollama_workbench.web import web_fetch, web_artifact_load, web_cleanup
 
 
 def prompt_run(user_prompt: str) -> None:
+    """Run a one-off prompt against the local model."""
     ollama_ensure_running()
 
     payload = {
@@ -51,6 +74,7 @@ def prompt_run(user_prompt: str) -> None:
 
 
 def json_run() -> None:
+    """Run a structured JSON response test using the local model."""
     ollama_ensure_running()
 
     payload = {
@@ -82,7 +106,12 @@ def json_run() -> None:
     print(json.dumps(parsed, indent=2))
 
 
+# WHY:
+# Tool-calling is kept as an explicit demo/test flow. The CLI shows the tool
+# request, executes the selected local tool, and feeds the result back to the
+# model so the full interaction stays visible and inspectable.
 def tool_run(path: str) -> None:
+    """Demonstrate tool-calling by listing and summarizing a directory."""
     ollama_ensure_running()
 
     messages = [
@@ -186,6 +215,7 @@ def tool_run(path: str) -> None:
 
 
 def chat_run(user_prompt: str, session_name: str | None = None) -> None:
+    """Run chat with optional session memory persistence."""
     ollama_ensure_running()
 
     messages = [
@@ -218,6 +248,7 @@ def chat_run(user_prompt: str, session_name: str | None = None) -> None:
 
 
 def clear_run(session_name: str | None = None) -> None:
+    """Clear stored messages for a session."""
     session_clear(session_name)
     print("[✓] Session cleared")
 
@@ -263,6 +294,7 @@ def summarize_command_run(args: argparse.Namespace) -> None:
 
 
 def status_command_run(args: argparse.Namespace) -> None:
+    """Display runtime configuration and system status."""
     del args
 
     paths = paths_get()
@@ -311,6 +343,7 @@ def _doctor_fail(message: str) -> None:
 
 
 def doctor_command_run(args: argparse.Namespace) -> None:
+    """Run local runtime checks and report failures."""
     del args
 
     paths = paths_get()
@@ -354,6 +387,7 @@ def doctor_command_run(args: argparse.Namespace) -> None:
 
 
 def web_fetch_command_run(args: argparse.Namespace) -> None:
+    """Fetch a URL and display a preview of the stored artifact."""
     artifact = web_fetch(args.url)
 
     print(f"url: {artifact['url']}")
@@ -371,6 +405,7 @@ def web_fetch_command_run(args: argparse.Namespace) -> None:
 
 
 def web_chat_command_run(args: argparse.Namespace) -> None:
+    """Answer a question using content from a single fetched URL."""
     artifact = web_fetch(args.url)
     content_text = artifact.get("content_text", "")
 
@@ -411,6 +446,7 @@ def web_chat_command_run(args: argparse.Namespace) -> None:
 
 
 def web_cleanup_command_run(args: argparse.Namespace) -> None:
+    """List or delete old web artifacts."""
     removed = web_cleanup(args.days, args.delete)
 
     if not removed:
@@ -442,6 +478,7 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
 
 
 def parser_build() -> argparse.ArgumentParser:
+    """Construct and return the CLI argument parser."""
     parser = argparse.ArgumentParser(description="Ollama Workbench local CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -505,7 +542,12 @@ def parser_build() -> argparse.ArgumentParser:
     return parser
 
 
+# WHY:
+# main() is the CLI boundary for argument parsing, command dispatch, and
+# command-level logging. This keeps one clear entrypoint where cross-cutting
+# concerns like logging and later top-level error handling can live.
 def main() -> None:
+    """Parse arguments, dispatch the command, and handle top-level logging."""
     parser = parser_build()
     args = parser.parse_args()
 
@@ -515,7 +557,28 @@ def main() -> None:
     if handler is None:
         raise RuntimeError(f"Unknown command: {command}")
 
-    handler(args)
+    log_event(
+        "command.start",
+        command=command,
+    )
+
+    try:
+        handler(args)
+    except Exception as exc:
+        log_event(
+            "command.error",
+            level="error",
+            command=command,
+            error=str(exc),
+        )
+
+        print(f"[!] error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    log_event(
+        "command.end",
+        command=command,
+    )
 
 
 if __name__ == "__main__":

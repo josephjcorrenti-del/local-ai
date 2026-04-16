@@ -1,9 +1,28 @@
 from __future__ import annotations
 
+"""
+ollama_workbench/tools.py
+
+Local tool definitions for model tool-calling.
+
+Responsibilities:
+- Define small, explicit tools callable by the model
+- Provide a registry (TOOL_REGISTRY) for execution
+- Provide tool schemas (TOOL_DEFS) for model-side function calling
+
+Design notes:
+- Tools are intentionally minimal and local-only
+- No hidden behavior: tools perform one explicit action and return structured output
+- Tool definitions (TOOL_DEFS) must stay in sync with callable functions
+- Output is bounded and simple to keep responses inspectable
+- This module does not handle tool orchestration (handled in cli.py)
+"""
+
 from pathlib import Path
 
 
 def directory_list(path: str) -> dict[str, object]:
+    """Return a shallow listing of files and directories for a local path."""
     base = Path(path).expanduser().resolve()
 
     if not base.exists():

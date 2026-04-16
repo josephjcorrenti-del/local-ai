@@ -1,5 +1,24 @@
 from __future__ import annotations
 
+"""
+ollama_workbench/paths.py
+
+Filesystem path resolution for the application.
+
+Responsibilities:
+- Derive all runtime and repo paths from a small set of roots
+- Keep path construction centralized and consistent
+- Provide a single immutable AppPaths object via paths_get()
+
+Design notes:
+- Repo paths (repo_root, src_root, scripts_dir) are derived from the code location
+- Runtime data paths are derived from CONFIG.ai_root and CONFIG.data_root
+- App data is kept outside the repo under:
+  ~/ai/data/<app_name>/
+- No global state: paths are recomputed on each call to paths_get()
+- Callers are responsible for creating directories when needed
+"""
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -8,6 +27,7 @@ from ollama_workbench.config import CONFIG
 
 @dataclass(frozen=True)
 class AppPaths:
+    """Resolved filesystem paths for repo code and runtime data."""
     repo_root: Path
     src_root: Path
     package_root: Path
@@ -21,7 +41,13 @@ class AppPaths:
     web_dir: Path
 
 
+# WHY:
+# All filesystem paths are derived from a small set of roots to keep layout
+# consistent and avoid duplication across modules. Repo paths come from the
+# code location, while runtime data paths come from CONFIG. This function
+# only computes paths; it does not create directories or perform I/O.
 def paths_get() -> AppPaths:
+    """Compute and return the current set of application paths."""
     package_root = Path(__file__).resolve().parent
     src_root = package_root.parent
     repo_root = src_root.parent

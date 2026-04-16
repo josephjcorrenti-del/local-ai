@@ -1,5 +1,27 @@
 from __future__ import annotations
 
+"""
+ollama_workbench/memory.py
+
+Session storage and summarization layer.
+
+Responsibilities:
+- Manage session lifecycle (load, save, append, clear)
+- Normalize session data across supported shapes (object and legacy list)
+- Provide bounded chat history for runtime prompts
+- Support manual summarization to keep memory size controlled
+- Persist all session data as inspectable JSON files
+
+Design notes:
+- Session files are the source of truth (no database, no hidden state)
+- Backward compatibility is preserved for older list-based session formats
+- Memory is intentionally bounded:
+  - recent messages are kept directly
+  - older messages may be summarized and replaced
+- Summarization is explicit (manual command), not automatic by default
+- Logging is used to trace file operations and summarize lifecycle, not content
+"""
+
 from datetime import UTC, datetime
 import json
 from json import JSONDecodeError
@@ -7,15 +29,18 @@ from pathlib import Path
 from typing import Any
 
 from ollama_workbench.config import CONFIG
+from ollama_workbench.log import log_event
 from ollama_workbench.paths import paths_get
 from ollama_workbench.runtime import ollama_generate, ollama_ensure_running
 
 
 def timestamp_now_get() -> str:
+    """Return current UTC timestamp in ISO format."""
     return datetime.now(UTC).isoformat()
 
 
 def session_path_get(session_name: str | None = None) -> Path:
+    """Return the filesystem path for the given session."""
     name = session_name or CONFIG.default_session_name
     sessions_dir = paths_get().sessions_dir
     sessions_dir.mkdir(parents=True, exist_ok=True)
@@ -23,6 +48,7 @@ def session_path_get(session_name: str | None = None) -> Path:
 
 
 def session_empty_get(session_name: str | None = None) -> dict[str, Any]:
+    """Return a new empty session object."""
     name = session_name or CONFIG.default_session_name
     now = timestamp_now_get()
 
@@ -35,10 +61,16 @@ def session_empty_get(session_name: str | None = None) -> dict[str, Any]:
     }
 
 
+# WHY:
+# Session files may exist in either the current object shape or an older
+# list-only shape. Normalize both at load/save boundaries so the rest of the
+# module can work against one stable structure without forcing an immediate
+# migration step.
 def session_normalize(
     data: Any,
     session_name: str | None = None,
 ) -> dict[str, Any]:
+    """Normalize session data into the standard object shape."""
     name = session_name or CONFIG.default_session_name
 
     if isinstance(data, dict):
@@ -76,27 +108,57 @@ def session_normalize(
 
 
 def session_load(session_name: str | None = None) -> dict[str, Any]:
+    """Load a session from disk, returning a normalized session object."""
     path = session_path_get(session_name)
+    session = session_name or CONFIG.default_session_name
+
     if not path.exists():
+        log_event(
+            "session.load.missing",
+            session=session,
+            path=str(path),
+        )
         return session_empty_get(session_name)
+
+    log_event(
+        "session.load.start",
+        session=session,
+        path=str(path),
+    )
 
     with path.open("r", encoding="utf-8") as fh:
         try:
             raw = json.load(fh)
         except JSONDecodeError as exc:
+            log_event(
+                "session.load.error",
+                level="error",
+                session=session,
+                path=str(path),
+                error=f"Malformed JSON: {exc}",
+            )
             raise RuntimeError(
                 f"Session file '{path}' is malformed JSON. "
                 "This likely came from a legacy file shape or interrupted write. "
                 "Fix or delete the file."
             ) from exc
 
+    log_event(
+        "session.load.ready",
+        session=session,
+        path=str(path),
+    )
+
     return session_normalize(raw, session_name)
+
 
 def session_save(
     session_data: dict[str, Any],
     session_name: str | None = None,
 ) -> None:
+    """Persist the given session data to disk."""
     normalized = session_normalize(session_data, session_name)
+    session = session_name or CONFIG.default_session_name
 
     if normalized["created_at"] is None:
         normalized["created_at"] = timestamp_now_get()
@@ -104,11 +166,23 @@ def session_save(
     normalized["updated_at"] = timestamp_now_get()
 
     path = session_path_get(session_name)
+
+    log_event(
+        "session.save",
+        session=session,
+        path=str(path),
+    )
+
     with path.open("w", encoding="utf-8") as fh:
         json.dump(normalized, fh, indent=2)
 
 
+# WHY:
+# Only a bounded set of recent conversational turns is passed back into the
+# model prompt. This keeps prompt size predictable and avoids feeding back
+# non-chat metadata that may exist in the stored session file.
 def session_turns_get(session_name: str | None = None) -> list[dict[str, str]]:
+    """Return recent conversational turns for prompt construction."""
     session_data = session_load(session_name)
     raw_messages = session_data["messages"]
     turns: list[dict[str, str]] = []
@@ -123,6 +197,14 @@ def session_turns_get(session_name: str | None = None) -> list[dict[str, str]]:
 
 
 def session_append(role: str, content: str, session_name: str | None = None) -> None:
+    """Append a new message to the session."""
+    session = session_name or CONFIG.default_session_name
+
+    log_event(
+        "session.append",
+        session=session,
+    )
+
     session_data = session_load(session_name)
     session_data["messages"].append(
         {
@@ -135,12 +217,21 @@ def session_append(role: str, content: str, session_name: str | None = None) -> 
 
 
 def session_clear(session_name: str | None = None) -> None:
+    """Delete the session file if it exists."""
     path = session_path_get(session_name)
+    session = session_name or CONFIG.default_session_name
+
     if path.exists():
+        log_event(
+            "session.clear",
+            session=session,
+            path=str(path),
+        )
         path.unlink()
 
 
 def session_names_get() -> list[str]:
+    """Return a sorted list of available session names."""
     sessions_dir = paths_get().sessions_dir
     if not sessions_dir.exists():
         return []
@@ -153,12 +244,28 @@ def session_names_get() -> list[str]:
 
 
 def session_stats_get(session_name: str) -> dict[str, object]:
+    """Return summary statistics for a single session."""
     path = session_path_get(session_name)
 
     if not path.exists():
         return {"session": session_name, "exists": False}
 
-    session_data = session_load(session_name)
+    try:
+        session_data = session_load(session_name)
+    except RuntimeError as exc:
+        log_event(
+            "session.stats.error",
+            level="error",
+            session=session_name,
+            path=str(path),
+            error=str(exc),
+        )
+        return {
+            "session": session_name,
+            "exists": True,
+            "error": "malformed session file",
+        }
+
     messages = session_data["messages"]
     file_size = path.stat().st_size
 
@@ -187,13 +294,30 @@ def session_stats_get(session_name: str) -> dict[str, object]:
 
 
 def sessions_stats_get() -> list[dict[str, object]]:
+    """Return summary statistics for all sessions."""
     summaries: list[dict[str, object]] = []
     for name in session_names_get():
-        summaries.append(session_stats_get(name))
+        try:
+            summaries.append(session_stats_get(name))
+        except Exception as exc:
+            log_event(
+                "session.stats.aggregate.error",
+                level="error",
+                session=name,
+                error=str(exc),
+            )
+            summaries.append(
+                {
+                    "session": name,
+                    "exists": True,
+                    "error": "failed to process session",
+                }
+            )
     return summaries
 
 
 def _messages_first_timestamp_get(messages: list[dict[str, Any]]) -> str | None:
+    """Return the first available message timestamp."""
     for message in messages:
         timestamp = message.get("timestamp_utc")
         if isinstance(timestamp, str):
@@ -202,17 +326,34 @@ def _messages_first_timestamp_get(messages: list[dict[str, Any]]) -> str | None:
 
 
 def _messages_last_timestamp_get(messages: list[dict[str, Any]]) -> str | None:
+    """Return the last available message timestamp."""
     for message in reversed(messages):
         timestamp = message.get("timestamp_utc")
         if isinstance(timestamp, str):
             return timestamp
     return None
 
+
+# WHY:
+# Summarization keeps recent raw messages intact while compressing older
+# context into a stored summary. This preserves short-term chat continuity
+# without letting session files grow without bound. Summarization is explicit
+# for now; it does not run automatically in the background.
 def session_summarize(session_name: str) -> None:
+    """Summarize older session messages and persist the result."""
+    log_event(
+        "session.summarize.start",
+        session=session_name,
+    )
+
     session_data = session_load(session_name)
     messages = session_data["messages"]
 
     if not messages:
+        log_event(
+            "session.summarize.skip_empty",
+            session=session_name,
+        )
         return
 
     keep_n = CONFIG.summary_keep_recent_messages
@@ -221,11 +362,13 @@ def session_summarize(session_name: str) -> None:
     max_input = CONFIG.summary_max_input_messages
     older_messages = older_messages[-max_input:]
 
-
     if not older_messages:
-        return  # nothing to summarize
+        log_event(
+            "session.summarize.skip_no_older_messages",
+            session=session_name,
+        )
+        return
 
-    # Build simple text for summarization input
     lines: list[str] = []
     for m in older_messages:
         role = m.get("role", "unknown")
@@ -239,7 +382,6 @@ def session_summarize(session_name: str) -> None:
     if len(summary_input) > max_chars:
         summary_input = summary_input[-max_chars:]
 
-    # Use ollama to generate summary
     ollama_ensure_running()
 
     prompt = f"Summarize the following text briefly:\n\n{summary_input}"
@@ -250,19 +392,30 @@ def session_summarize(session_name: str) -> None:
             model_name=CONFIG.summary_model_name,
         )
     except RuntimeError as exc:
+        log_event(
+            "session.summarize.error",
+            level="error",
+            session=session_name,
+            model=CONFIG.summary_model_name,
+            error=str(exc),
+        )
         raise RuntimeError(
             f"Session summarize failed for '{session_name}'. "
             "The summarization request may be too large for the current local model/runtime."
         ) from exc
 
-    # Write summary object
     session_data["summary"] = {
         "text": summary_text,
         "updated_at": timestamp_now_get(),
         "source_message_count": len(messages),
     }
 
-    # Keep only recent messages
     session_data["messages"] = recent_messages
 
     session_save(session_data, session_name)
+
+    log_event(
+        "session.summarize.ready",
+        session=session_name,
+        model=CONFIG.summary_model_name,
+    )

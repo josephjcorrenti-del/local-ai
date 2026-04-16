@@ -98,6 +98,46 @@ v2 cleanup final
 [x] do final docs + todo consistency pass
 [x] do final smoke pass across active commands
 
+v3 - readability / traceability
+
+v3 phase 1 - logs
+[x] define logging policy and event shape
+[x] define which event fields may be null in first pass
+[x] add small shared logging helper
+[x] add command start/end logging in cli.py
+[x] add runtime request/startup logging in runtime.py
+[x] add session/web file-operation logging in memory.py and web.py
+[x] keep logs stdout-friendly and ELK-compatible JSON-per-line
+[x] comment out old ndjson shape/examples where replaced and add new shape inline
+
+v3 phase 2 - comments
+[x] add module-level intent comments where behavior is non-obvious
+[x] add short docstrings for public entry points
+[x] add targeted comments for session compatibility/normalization flow
+[x] add targeted comments for runtime startup/model checks
+[x] decide whether log.py should have a header comment
+[x] decide whether log.py should include a sample path comment
+[x] update comments to match actual behavior
+[x] remove comments that restate obvious code
+
+v3 phase 3 - error handling
+[x] add top-level CLI error boundary in main()
+[x] show clean user-facing errors by default
+[x] preserve traceback only for later debug mode
+[x] handle urllib/network failures explicitly in runtime.py and web.py
+[x] isolate malformed session files during aggregate commands
+[x] keep failure messages explicit and inspectable
+
+v3 phase 4 - doctor enhancement
+[ ] add structured doctor check logging
+[ ] add doctor summary output (checks run / failures)
+[ ] verify helper scripts exist and are runnable
+[ ] verify app data root and web dir are writable
+[ ] add doctor checks for malformed session files
+[ ] report bad session files without aborting full doctor run
+[ ] keep doctor output human-readable and logs machine-readable
+[ ] do not auto-repair; provide explicit guidance only
+
 to be prioritized (tbp)
 
 memory / summaries
@@ -133,17 +173,12 @@ more robust jsons
 [ ] add explicit repair/migrate command for session files
 [ ] isolate bad session files during aggregate commands (for example stats) and continue showing valid sessions
 
-flexible code 
+flexible code
 [ ] encoding="utf-8"
 
 containers
 [ ] containerize ollama_workbench
 [ ] make helper script handling container-friendly
-
-readability/traceability
-[ ] logs (elk compatible)
-[ ] comments
-[ ] error handling
 
 web search
 [ ] add web-search by query
@@ -151,3 +186,20 @@ web search
 [ ] add richer extraction/cleaning strategies for fetched pages
 [ ] revisit storage/archive strategy for old chats and old web artifacts
 [ ] make helper script handling container-friendly
+
+other tasks
+[ ] make .sh python
+
+ELK (standup)
+[ ] match current ELK files
+[ ] make available in Kibana
+[ ] decide whether to keep logging stdout-only or also support file output
+[ ] decide whether to keep logging helper minimal or adopt fuller logger/config setup
+[ ] decide whether env-driven logging config is needed
+[ ] decide whether rotating file handler is needed
+[ ] decide whether run_id is needed in first real pass
+[ ] decide whether decorator-based function tracing is needed
+[ ] decide which additional fields should become required later instead of null
+[ ] evaluate duplicate /api/version calls
+    - collapse redundant health checks OR tag separately
+    - preserve traceability
