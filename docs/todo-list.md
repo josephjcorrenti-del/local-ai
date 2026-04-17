@@ -158,10 +158,13 @@ v5 phase 1 - debug mode
 v5 phase 2 - packaging / local install
 [x] add console script entry point
 [x] install in local venv with pip
-[ ] versioning approach
+[x] versioning approach
 
-v5 phase 3 - shell helper cleanup
-[ ] make .sh python
+v5 phase 3 - runtime helper cleanup
+[ ] decide which active helper scripts should remain repo-owned
+[ ] replace active shell helpers with Python only where it improves clarity or portability
+[ ] keep legacy_ai_stack scripts isolated and clearly out of active workflow
+[ ] align helper behavior with manual ollama serve runtime
 
 v6 - quality and safety hardening
 

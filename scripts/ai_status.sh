@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
-echo "=== AI Stack Status ==="
+echo "=== Ollama Runtime Status ==="
 
-echo -n "Ollama: "
-systemctl is-active ollama || true
+if ss -ltn '( sport = :11434 )' | grep -q 11434; then
+  echo "Ollama serving: yes"
+  echo
 
-echo -n "Docker: "
-systemctl is-active docker || true
+  echo "Process:"
+  ps -ef | grep -E '[o]llama serve' || true
+  echo
 
-echo -n "Open WebUI: "
-docker ps --format '{{.Names}}' | grep -q open-webui && echo running || echo stopped
+  echo "Models:"
+  ollama list || echo "failed to list models"
 
+else
+  echo "Ollama serving: no"
+fi

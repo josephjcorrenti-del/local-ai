@@ -9,16 +9,20 @@ run_owb() {
   fi
 }
 
+echo "=== ai_status.sh ==="
+./scripts/ai_status.sh
+echo
+
+echo "=== ai_health.sh ==="
+./scripts/ai_health.sh
+echo
+
 echo "=== sessions ==="
 run_owb sessions
 echo
 
 echo "=== stats ==="
 run_owb stats
-echo
-
-echo "=== chat ==="
-run_owb chat "test"
 echo
 
 echo "=== summarize ==="
