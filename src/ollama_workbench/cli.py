@@ -657,6 +657,11 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
 def parser_build() -> argparse.ArgumentParser:
     """Construct and return the CLI argument parser."""
     parser = argparse.ArgumentParser(description="Ollama Workbench local CLI")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Show full traceback on errors",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     p_prompt = subparsers.add_parser("prompt", help="Run a plain prompt")
@@ -752,6 +757,14 @@ def main() -> None:
             command=command,
             error=str(exc),
         )
+
+        if getattr(args, "debug", False):
+            import traceback
+            traceback.print_exc()
+        else:
+            print(f"[!] error: {exc}", file=sys.stderr)
+
+        sys.exit(1)
 
         print(f"[!] error: {exc}", file=sys.stderr)
         sys.exit(1)
