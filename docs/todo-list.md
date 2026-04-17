@@ -140,25 +140,14 @@ v3 phase 4 - doctor enhancement
 
 v4 - quick wins
 
-v4 phase 1 - doctor enhancement
-[ ] add structured doctor check logging
-[ ] add doctor summary output (checks run / failures)
-[ ] verify helper scripts exist and are runnable
-[ ] verify app data root and web dir are writable
-[ ] add doctor checks for malformed session files
-[ ] report bad session files without aborting full doctor run
-[ ] keep doctor output human-readable and logs machine-readable
-[ ] do not auto-repair; provide explicit guidance only
+v4 phase 1 - summary policy cleanup
+[x] add overnight summarize mode
+[x] define simple thresholds for later auto-summary
+[x] define when summaries run automatically vs only by request
 
-v4 phase 2 - summary policy cleanup
-[ ] add overnight summarize mode
-[ ] define simple thresholds for later auto-summary
-[ ] define when summaries run automatically vs only by request
-
-v4 phase 3 - small codebase polish
-[ ] encoding="utf-8"
-[ ] add sample config
-[ ] optional: CLI cleanup (skipped)
+v4 phase 2 - small codebase polish
+[x] add encoding="utf-8" where missing and useful
+[x] decide whether external/sample config is needed before adding config file support
 
 v5 - operator and developer UX
 
@@ -241,4 +230,30 @@ v11 phase 2 - interface exploration
 [ ] web ui only if still wanted
 
 to be prioritized (tbp)
+
+Doctor
+[ ] create and move doctor logic in cli.py to doctor.py
 [ ] refactor cli.doctor_command_run
+[ ] revisit doctor output grouping only if it improves readability
+[ ] revisit doctor check taxonomy only if ELK/log review justifies it
+
+CLI cleanup
+[ ] refactor repeated doctor writable-check pattern only if it improves readability without hiding behavior
+[ ] make summarize output distinguish "summarized" vs "no summary needed"
+[ ] decide whether summarize --all should continue on per-session failure or fail fast
+[ ] decide whether summary_inactive_minutes should remain reserved or be removed until used
+[ ] review duplicate Ollama health/model calls only if logs become noisy
+[ ] tighten session naming around "load ok" vs deeper validation if needed later
+[ ] create and move doctor logic in cli.py to doctor.py
+[ ] keep cli.py focused on orchestration only as complexity justifies
+[ ] review summarize/user-facing CLI messages so skipped work is reported accurately
+[ ] standardize command handler/docstring shape where helpful
+
+Web.py
+[ ] rename web.py to web_search.py
+
+File system
+[ ] read file system with explicit approval
+
+Other 
+[ ] decide whether formats besides utf-8 should be allowed.
