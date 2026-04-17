@@ -339,6 +339,12 @@ def _messages_last_timestamp_get(messages: list[dict[str, Any]]) -> str | None:
 # context into a stored summary. This preserves short-term chat continuity
 # without letting session files grow without bound. Summarization is explicit
 # for now; it does not run automatically in the background.
+# SUMMARY POLICY (v4 baseline):
+# - Only runs when explicitly invoked (no automatic triggers yet)
+# - Keeps last CONFIG.summary_keep_recent_messages raw messages
+# - Summarizes up to CONFIG.summary_max_input_messages older messages
+# - Caps input to CONFIG.summary_max_input_chars
+# - Intended to be bounded, predictable, and inspectable
 def session_summarize(session_name: str) -> None:
     """Summarize older session messages and persist the result."""
     log_event(

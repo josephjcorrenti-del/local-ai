@@ -46,6 +46,7 @@ class AppConfig:
     chat_model_name: str = large_model_name
     summary_model_name: str = lightweight_model_name
 
+    # Summarization policy (explicit, no background behavior)
     summary_keep_recent_messages: int = 8
     summary_max_input_messages: int = 12
     summary_inactive_minutes: int = 30
