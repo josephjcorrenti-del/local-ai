@@ -345,6 +345,9 @@ def _messages_last_timestamp_get(messages: list[dict[str, Any]]) -> str | None:
 # - Summarizes up to CONFIG.summary_max_input_messages older messages
 # - Caps input to CONFIG.summary_max_input_chars
 # - Intended to be bounded, predictable, and inspectable
+# NOTE:
+# This function performs summarization only when explicitly called.
+# Threshold values bound the work performed, but do not trigger automatic runs.
 def session_summarize(session_name: str) -> None:
     """Summarize older session messages and persist the result."""
     log_event(

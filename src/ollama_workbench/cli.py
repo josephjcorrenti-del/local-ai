@@ -289,7 +289,12 @@ def stats_command_run(args: argparse.Namespace) -> None:
     print(json.dumps(sessions_stats_get(), indent=2))
 
 
+# WHY:
+# Summarization is always operator-invoked from the CLI.
+# Even batch summarization via --all is explicit and does not imply
+# background or automatic summarization policy.
 def summarize_command_run(args: argparse.Namespace) -> None:
+    """Run explicit session summarization for one session or all sessions."""
     if args.all:
         for name in session_names_get():
             session_summarize(name)
@@ -677,9 +682,12 @@ def parser_build() -> argparse.ArgumentParser:
 
     subparsers.add_parser("status", help="Show AI runtime status")
 
-    p_summarize = subparsers.add_parser("summarize", help="Summarize a session")
+    p_summarize = subparsers.add_parser(
+        "summarize",
+        help="Explicitly summarize one session or all sessions",
+    )
     p_summarize.add_argument("--session", default=None, help="Session name")
-    p_summarize.add_argument("--all", action="store_true", help="Summarize all sessions")
+    p_summarize.add_argument("--all", action="store_true", help="Explicitly summarize all sessions")
 
     subparsers.add_parser("doctor", help="Run local runtime checks")
 
