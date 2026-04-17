@@ -290,9 +290,15 @@ def stats_command_run(args: argparse.Namespace) -> None:
 
 
 def summarize_command_run(args: argparse.Namespace) -> None:
+    if args.all:
+        for name in session_names_get():
+            session_summarize(name)
+            print(f"[✓] Session summarized ({name})")
+        return
+
     session_name = args.session or CONFIG.default_session_name
     session_summarize(session_name)
-    print("[✓] Session summarized")
+    print(f"[✓] Session summarized ({session_name})")
 
 
 def status_command_run(args: argparse.Namespace) -> None:
@@ -673,6 +679,7 @@ def parser_build() -> argparse.ArgumentParser:
 
     p_summarize = subparsers.add_parser("summarize", help="Summarize a session")
     p_summarize.add_argument("--session", default=None, help="Session name")
+    p_summarize.add_argument("--all", action="store_true", help="Summarize all sessions")
 
     subparsers.add_parser("doctor", help="Run local runtime checks")
 
