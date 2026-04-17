@@ -152,12 +152,12 @@ v4 phase 2 - small codebase polish
 v5 - operator and developer UX
 
 v5 phase 1 - debug mode
-[ ] preserve detailed exception context for debug/developer mode
-[ ] add --debug flag for full traceback output
+[x] preserve detailed exception context for debug/developer mode
+[x] add --debug flag for full traceback output
 
 v5 phase 2 - packaging / local install
-[ ] add console script entry point
-[ ] install with pip/pipx locally
+[x] add console script entry point
+[x] install in local venv with pip
 [ ] versioning approach
 
 v5 phase 3 - shell helper cleanup
@@ -237,6 +237,13 @@ Doctor
 [ ] revisit doctor output grouping only if it improves readability
 [ ] revisit doctor check taxonomy only if ELK/log review justifies it
 
+Debug
+[ ] decide whether --debug should affect argparse parse errors
+[ ] decide whether --debug should surface contained/structured errors differently
+[ ] decide whether debug mode should log exception type separately from error text
+[ ] decide whether a later --verbose flag is needed distinct from --debug
+[ ] add tests for normal vs --debug error behavior
+
 CLI cleanup
 [ ] refactor repeated doctor writable-check pattern only if it improves readability without hiding behavior
 [ ] make summarize output distinguish "summarized" vs "no summary needed"
@@ -257,3 +264,5 @@ File system
 
 Other 
 [ ] decide whether formats besides utf-8 should be allowed.
+[ ] remove test file ~/ai/data/ollama_workbench/session/bad_session_that_breaks.json.
+[ ] decide whether pipx install is needed for operator workflow

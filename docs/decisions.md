@@ -60,3 +60,12 @@
 - Web operations should use separate commands/tools.
 - Fetched web content should be saved as inspectable artifacts under the app data root.
 - AI reasoning over web content should operate on explicit fetched artifacts.
+
+## Versioning approach
+
+- Keep version in pyproject.toml
+- Update manually at meaningful milestones
+- Use 0.x.y while command shape and workflow are still evolving
+- Bump patch for fixes/polish
+- Bump minor for meaningful new capabilities or workflow changes
+- Reserve 1.0.0 for a more stable, intentional CLI contract
