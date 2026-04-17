@@ -129,6 +129,18 @@ v3 phase 3 - error handling
 [x] keep failure messages explicit and inspectable
 
 v3 phase 4 - doctor enhancement
+[x] add structured doctor check logging
+[x] add doctor summary output (checks run / failures)
+[x] verify helper scripts exist and are runnable
+[x] verify app data root and web dir are writable
+[x] add doctor checks for malformed session files
+[x] report bad session files without aborting full doctor run
+[x] keep doctor output human-readable and logs machine-readable
+[x] do not auto-repair; provide explicit guidance only
+
+v4 - quick wins
+
+v4 phase 1 - doctor enhancement
 [ ] add structured doctor check logging
 [ ] add doctor summary output (checks run / failures)
 [ ] verify helper scripts exist and are runnable
@@ -138,61 +150,59 @@ v3 phase 4 - doctor enhancement
 [ ] keep doctor output human-readable and logs machine-readable
 [ ] do not auto-repair; provide explicit guidance only
 
-to be prioritized (tbp)
-
-memory / summaries
+v4 phase 2 - summary policy cleanup
+[ ] add overnight summarize mode
 [ ] define simple thresholds for later auto-summary
+[ ] define when summaries run automatically vs only by request
 
-packaging / release
+v4 phase 3 - small codebase polish
+[ ] encoding="utf-8"
+[ ] add sample config
+[ ] optional: CLI cleanup (skipped)
+
+v5 - operator and developer UX
+
+v5 phase 1 - debug mode
+[ ] preserve detailed exception context for debug/developer mode
+[ ] add --debug flag for full traceback output
+
+v5 phase 2 - packaging / local install
 [ ] add console script entry point
 [ ] install with pip/pipx locally
 [ ] versioning approach
 
-quality
-[ ] add basic tests
-[ ] add sample config
-
-future ui
-[ ] richer cli output
-[ ] tui exploration
-[ ] web ui only if still wanted
-
-integration
-[ ] decide later how ollama_workbench may integrate with manumental-effort
-[ ] keep integration at boundary, not shared mess
-
-storage / archive (future)
-[ ] revisit separate storage only if chat JSONs need archiving or cold storage.  (removed storage from current flow)
-[ ] revisit separate storage only if old web artifacts need archiving or cold storage.
-
-more robust jsons
-[ ] catch runtime errors in CLI and show clean user-facing error
-[ ] preserve detailed exception context for debug/developer mode
-[ ] add --debug flag for full traceback output
-[ ] add doctor command checks for malformed session files
-[ ] add explicit repair/migrate command for session files
-[ ] isolate bad session files during aggregate commands (for example stats) and continue showing valid sessions
-
-flexible code
-[ ] encoding="utf-8"
-
-containers
-[ ] containerize ollama_workbench
-[ ] make helper script handling container-friendly
-
-web search
-[ ] add web-search by query
-[ ] support multi-source web-chat
-[ ] add richer extraction/cleaning strategies for fetched pages
-[ ] revisit storage/archive strategy for old chats and old web artifacts
-[ ] make helper script handling container-friendly
-
-other tasks
+v5 phase 3 - shell helper cleanup
 [ ] make .sh python
 
-ELK (standup)
+v6 - quality and safety hardening
+
+v6 phase 1 - tests
+[ ] add basic tests
+
+v6 phase 2 - session robustness
+[ ] add explicit repair/migrate command for session files
+
+v6 phase 3 - archive strategy review
+[ ] revisit separate storage only if chat JSONs need archiving or cold storage
+[ ] revisit separate storage only if old web artifacts need archiving or cold storage
+[ ] revisit storage/archive strategy for old chats and old web artifacts
+
+v7 - web search capability expansion
+
+v7 phase 1 - richer fetch behavior
+[ ] add richer extraction/cleaning strategies for fetched pages
+
+v7 phase 2 - explicit search workflows
+[ ] add web-search by query
+[ ] support multi-source web-chat
+
+v8 - observability / ELK
+
+v8 phase 1 - ELK standup
 [ ] match current ELK files
 [ ] make available in Kibana
+
+v8 phase 2 - logging design follow-up
 [ ] decide whether to keep logging stdout-only or also support file output
 [ ] decide whether to keep logging helper minimal or adopt fuller logger/config setup
 [ ] decide whether env-driven logging config is needed
@@ -203,3 +213,32 @@ ELK (standup)
 [ ] evaluate duplicate /api/version calls
     - collapse redundant health checks OR tag separately
     - preserve traceability
+
+v9 - integration and platform decisions
+
+v9 phase 1 - integration boundary
+[ ] decide later how ollama_workbench may integrate with manumental-effort
+[ ] keep integration at boundary, not shared mess
+
+v9 phase 2 - containers
+[ ] containerize ollama_workbench
+[ ] make helper script handling container-friendly
+
+v10 - richer CLI output
+
+v10 phase 1 - output refinement
+[ ] richer cli output
+
+v11 - gui exploration
+
+v11 phase 1 - starting a GUI
+[ ] start a GUI for ollama_workbench
+[ ] decide whether the first GUI should be web-based
+[ ] keep GUI optional and separate from core CLI flow
+
+v11 phase 2 - interface exploration
+[ ] gui exploration
+[ ] web ui only if still wanted
+
+to be prioritized (tbp)
+[ ] refactor cli.doctor_command_run
