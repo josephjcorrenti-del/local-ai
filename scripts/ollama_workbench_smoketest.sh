@@ -1,37 +1,46 @@
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
+
+run_owb() {
+  if command -v ollama-workbench >/dev/null 2>&1; then
+    ollama-workbench "$@"
+  else
+    PYTHONPATH=src python3 -m ollama_workbench.cli "$@"
+  fi
+}
 
 echo "=== sessions ==="
-PYTHONPATH=src python3 -m ollama_workbench.cli sessions
+run_owb sessions
 echo
 
 echo "=== stats ==="
-PYTHONPATH=src python3 -m ollama_workbench.cli stats
+run_owb stats
 echo
 
 echo "=== chat ==="
-PYTHONPATH=src python3 -m ollama_workbench.cli chat "test"
+run_owb chat "test"
 echo
 
 echo "=== summarize ==="
-PYTHONPATH=src python3 -m ollama_workbench.cli summarize --session scratch
+run_owb summarize --session scratch
 echo
 
 echo "=== status ==="
-PYTHONPATH=src python3 -m ollama_workbench.cli status
+run_owb status
 echo
 
 echo "=== doctor ==="
-PYTHONPATH=src python3 -m ollama_workbench.cli doctor
+run_owb doctor
 echo
 
 echo "=== web-fetch ==="
-PYTHONPATH=src python3 -m ollama_workbench.cli web-fetch https://example.com
+run_owb web-fetch https://example.com
 echo
 
 echo "=== web-chat ==="
-PYTHONPATH=src python3 -m ollama_workbench.cli web-chat "test" --url https://example.com
+run_owb web-chat "test" --url https://example.com
 echo
 
 echo "=== web-cleanup (dry run) ==="
-PYTHONPATH=src python3 -m ollama_workbench.cli web-cleanup --days 0
+run_owb web-cleanup --days 0
 echo
