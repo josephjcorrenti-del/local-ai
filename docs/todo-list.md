@@ -161,15 +161,19 @@ v5 phase 2 - packaging / local install
 [x] versioning approach
 
 v5 phase 3 - runtime helper cleanup
-[ ] decide which active helper scripts should remain repo-owned
-[ ] replace active shell helpers with Python only where it improves clarity or portability
-[ ] keep legacy_ai_stack scripts isolated and clearly out of active workflow
-[ ] align helper behavior with manual ollama serve runtime
+[x] decide which active helper scripts should remain repo-owned
+[x] replace active shell helpers with Python only where it improves clarity or portability
+[x] keep legacy_ai_stack scripts isolated and clearly out of active workflow
+[x] align helper behavior with manual ollama serve runtime
 
 v6 - quality and safety hardening
 
 v6 phase 1 - tests
-[ ] add basic tests
+[x] add basic tests
+[x] add session test fixtures under test_data
+
+v6 phase 1.1 - GitHub Actions
+[~] add minimal GitHub Actions workflow for portable test checks
 
 v6 phase 2 - session robustness
 [ ] add explicit repair/migrate command for session files
@@ -267,5 +271,4 @@ File system
 
 Other 
 [ ] decide whether formats besides utf-8 should be allowed.
-[ ] remove test file ~/ai/data/ollama_workbench/session/bad_session_that_breaks.json.
 [ ] decide whether pipx install is needed for operator workflow
