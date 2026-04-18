@@ -173,8 +173,12 @@ def session_save(
         path=str(path),
     )
 
-    with path.open("w", encoding="utf-8") as fh:
+    tmp_path = path.with_suffix(".json.tmp")
+
+    with tmp_path.open("w", encoding="utf-8") as fh:
         json.dump(normalized, fh, indent=2)
+
+    tmp_path.replace(path)
 
 
 # WHY:
@@ -314,6 +318,68 @@ def sessions_stats_get() -> list[dict[str, object]]:
                 }
             )
     return summaries
+
+
+def session_migrate(session_name: str, dry_run: bool = False) -> dict[str, object]:
+    """Normalize and rewrite a session into canonical object shape."""
+    path = session_path_get(session_name)
+
+    if not path.exists():
+        raise RuntimeError(f"Session '{session_name}' does not exist.")
+
+    log_event(
+        "session.migrate.start",
+        session=session_name,
+        path=str(path),
+    )
+
+    with path.open("r", encoding="utf-8") as fh:
+        try:
+            raw = json.load(fh)
+        except JSONDecodeError as exc:
+            log_event(
+                "session.migrate.error",
+                level="error",
+                session=session_name,
+                path=str(path),
+                error=f"Malformed JSON: {exc}",
+            )
+            raise RuntimeError(
+                f"Session file '{path}' is malformed JSON. "
+                "Migrate only supports valid JSON session files."
+            ) from exc
+
+    normalized = session_normalize(raw, session_name)
+
+    changed = raw != normalized
+
+    if dry_run:
+        log_event(
+            "session.migrate.dry_run",
+            session=session_name,
+            path=str(path),
+        )
+        return {
+            "session": session_name,
+            "path": str(path),
+            "changed": changed,
+            "written": False,
+        }
+
+    session_save(normalized, session_name)
+
+    log_event(
+        "session.migrate.ready",
+        session=session_name,
+        path=str(path),
+    )
+
+    return {
+        "session": session_name,
+        "path": str(path),
+        "changed": changed,
+        "written": True,
+    }
 
 
 def _messages_first_timestamp_get(messages: list[dict[str, Any]]) -> str | None:

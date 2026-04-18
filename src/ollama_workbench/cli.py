@@ -33,6 +33,7 @@ from ollama_workbench.memory import (
     session_append,
     session_clear,
     session_load,
+    session_migrate,
     session_names_get,
     session_stats_get,
     session_summarize,
@@ -514,24 +515,6 @@ def doctor_command_run(args: argparse.Namespace) -> None:
         failures += 1
 
     checks_run += 1
-    script = paths.ai_start_script
-
-    if script.exists() and script.is_file() and os.access(script, os.X_OK):
-        log_event("doctor.check.ok", command="doctor", path=str(script))
-        _doctor_ok(f"helper script ok ({script.name})")
-    else:
-        log_event(
-            "doctor.check.fail",
-            level="error",
-            command="doctor",
-            path=str(script),
-            error="missing or not executable",
-        )
-        _doctor_fail(f"helper script not runnable ({script.name})")
-        print(f"    expected: executable file at {script}")
-        failures += 1
-
-    checks_run += 1
     script = paths.ai_status_script
 
     if script.exists() and script.is_file() and os.access(script, os.X_OK):
@@ -637,6 +620,31 @@ def web_cleanup_command_run(args: argparse.Namespace) -> None:
         print(f"  {path}")
 
 
+def migrate_command_run(args: argparse.Namespace) -> None:
+    """Normalize and rewrite one session or all sessions."""
+    if args.all:
+        names = session_names_get()
+        if not names:
+            print("No sessions found.")
+            return
+
+        for name in names:
+            result = session_migrate(name, dry_run=args.dry_run)
+            if args.dry_run:
+                print(f"[✓] Would migrate ({name}) changed={result['changed']}")
+            else:
+                print(f"[✓] Session migrated ({name}) changed={result['changed']}")
+        return
+
+    session_name = args.session or CONFIG.default_session_name
+    result = session_migrate(session_name, dry_run=args.dry_run)
+
+    if args.dry_run:
+        print(f"[✓] Would migrate ({session_name}) changed={result['changed']}")
+    else:
+        print(f"[✓] Session migrated ({session_name}) changed={result['changed']}")
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -651,6 +659,7 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "web-fetch": web_fetch_command_run,
     "web-chat": web_chat_command_run,
     "web-cleanup": web_cleanup_command_run,
+    "migrate": migrate_command_run,
 }
 
 
@@ -661,6 +670,11 @@ def parser_build() -> argparse.ArgumentParser:
         "--debug",
         action="store_true",
         help="Show full traceback on errors",
+    )
+    parser.add_argument(
+        "--data-dir",
+        default="data",
+        help="AI data directory under ~/ai (default: data)",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -725,6 +739,18 @@ def parser_build() -> argparse.ArgumentParser:
         help="Actually delete files (default: dry run)",
     )
 
+    p_migrate = subparsers.add_parser(
+        "migrate",
+        help="Normalize and rewrite one session or all sessions",
+    )
+    p_migrate.add_argument("--session", default=None, help="Session name")
+    p_migrate.add_argument("--all", action="store_true", help="Migrate all sessions")
+    p_migrate.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be migrated without writing files",
+    )
+
     return parser
 
 
@@ -736,6 +762,8 @@ def main() -> None:
     """Parse arguments, dispatch the command, and handle top-level logging."""
     parser = parser_build()
     args = parser.parse_args()
+
+    os.environ["OWB_DATA_DIR"] = args.data_dir
 
     command = args.command
     handler = COMMAND_HANDLERS.get(command)
@@ -764,9 +792,6 @@ def main() -> None:
         else:
             print(f"[!] error: {exc}", file=sys.stderr)
 
-        sys.exit(1)
-
-        print(f"[!] error: {exc}", file=sys.stderr)
         sys.exit(1)
 
     log_event(
