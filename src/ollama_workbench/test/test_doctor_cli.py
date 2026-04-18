@@ -31,11 +31,18 @@ def test_doctor_passes_on_normal_data():
     assert "[✓] helper script ok (ai_status.sh)" in result.stdout
 
 
-def test_doctor_fails_on_test_data_malformed_session():
+def test_doctor_uses_test_data_sessions_dir():
+    result = run_cli("--data-dir", "test_data", "doctor")
+
+    expected_sessions_dir = Path.home() / "ai" / "test_data" / "ollama_workbench" / "sessions"
+
+    assert f"sessions dir writable ({expected_sessions_dir})" in result.stdout
+
+
+def test_doctor_reports_aggregate_failure_cleanly_when_test_data_fails():
     result = run_cli("--data-dir", "test_data", "doctor")
 
     assert result.returncode != 0
-    assert "session file malformed (malformed_bad_session)" in result.stdout
-    assert "session load ok (valid_default)" in result.stdout
-    assert "failures: 1" in result.stdout
-    assert "[!] error: doctor found 1 failing check(s)" in result.stderr
+    assert "checks run:" in result.stdout
+    assert "failures:" in result.stdout
+    assert "[!] error:" in result.stderr

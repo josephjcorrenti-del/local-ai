@@ -25,16 +25,22 @@ def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
 def test_status_uses_default_data_dir():
     result = run_cli("status")
 
+    expected_app_data_root = Path.home() / "ai" / "data" / "ollama_workbench"
+    expected_sessions_dir = expected_app_data_root / "sessions"
+
     assert result.returncode == 0
     assert "app: ollama_workbench" in result.stdout
-    assert "app_data_root: /home/joe/ai/data/ollama_workbench" in result.stdout
-    assert "sessions_dir: /home/joe/ai/data/ollama_workbench/sessions" in result.stdout
+    assert f"app_data_root: {expected_app_data_root}" in result.stdout
+    assert f"sessions_dir: {expected_sessions_dir}" in result.stdout
 
 
 def test_status_uses_test_data_dir():
     result = run_cli("--data-dir", "test_data", "status")
 
+    expected_app_data_root = Path.home() / "ai" / "test_data" / "ollama_workbench"
+    expected_sessions_dir = expected_app_data_root / "sessions"
+
     assert result.returncode == 0
     assert "app: ollama_workbench" in result.stdout
-    assert "app_data_root: /home/joe/ai/test_data/ollama_workbench" in result.stdout
-    assert "sessions_dir: /home/joe/ai/test_data/ollama_workbench/sessions" in result.stdout
+    assert f"app_data_root: {expected_app_data_root}" in result.stdout
+    assert f"sessions_dir: {expected_sessions_dir}" in result.stdout
