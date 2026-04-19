@@ -382,6 +382,92 @@ def session_migrate(session_name: str, dry_run: bool = False) -> dict[str, objec
     }
 
 
+def session_repair(session_name: str, dry_run: bool = False) -> dict[str, object]:
+    """Repair one session file conservatively and explicitly."""
+    path = session_path_get(session_name)
+
+    if not path.exists():
+        raise RuntimeError(f"Session '{session_name}' does not exist.")
+
+    broken_path = path.with_suffix(".json.broken")
+
+    log_event(
+        "session.repair.start",
+        session=session_name,
+        path=str(path),
+    )
+
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            raw = json.load(fh)
+    except JSONDecodeError as exc:
+        log_event(
+            "session.repair.malformed",
+            level="error",
+            session=session_name,
+            path=str(path),
+            error=f"Malformed JSON: {exc}",
+        )
+
+        if dry_run:
+            return {
+                "session": session_name,
+                "path": str(path),
+                "backup_path": str(broken_path),
+                "action": "reset_from_malformed",
+                "written": False,
+            }
+
+        broken_path.write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
+        session_save(session_empty_get(session_name), session_name)
+
+        log_event(
+            "session.repair.ready",
+            session=session_name,
+            path=str(path),
+            error=None,
+        )
+
+        return {
+            "session": session_name,
+            "path": str(path),
+            "backup_path": str(broken_path),
+            "action": "reset_from_malformed",
+            "written": True,
+        }
+
+    normalized = session_normalize(raw, session_name)
+    changed = raw != normalized
+
+    if dry_run:
+        return {
+            "session": session_name,
+            "path": str(path),
+            "backup_path": None,
+            "action": "normalize_valid_json",
+            "changed": changed,
+            "written": False,
+        }
+
+    session_save(normalized, session_name)
+
+    log_event(
+        "session.repair.ready",
+        session=session_name,
+        path=str(path),
+        error=None,
+    )
+
+    return {
+        "session": session_name,
+        "path": str(path),
+        "backup_path": None,
+        "action": "normalize_valid_json",
+        "changed": changed,
+        "written": True,
+    }
+
+
 def _messages_first_timestamp_get(messages: list[dict[str, Any]]) -> str | None:
     """Return the first available message timestamp."""
     for message in messages:

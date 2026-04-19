@@ -35,6 +35,7 @@ from ollama_workbench.memory import (
     session_load,
     session_migrate,
     session_names_get,
+    session_repair,
     session_stats_get,
     session_summarize,
     session_turns_get,
@@ -645,6 +646,38 @@ def migrate_command_run(args: argparse.Namespace) -> None:
         print(f"[✓] Session migrated ({session_name}) changed={result['changed']}")
 
 
+def repair_command_run(args: argparse.Namespace) -> None:
+    """Repair one session file conservatively and explicitly."""
+    if not args.session:
+        raise RuntimeError("repair requires --session")
+
+    result = session_repair(args.session, dry_run=args.dry_run)
+
+    if args.dry_run:
+        if result["action"] == "reset_from_malformed":
+            print(
+                f"[✓] Would repair ({args.session}) by backing up malformed file "
+                f"to {result['backup_path']} and resetting the session"
+            )
+        else:
+            print(
+                f"[✓] Would repair ({args.session}) by normalizing valid JSON "
+                f"changed={result['changed']}"
+            )
+        return
+
+    if result["action"] == "reset_from_malformed":
+        print(
+            f"[✓] Session repaired ({args.session}); malformed file backed up to "
+            f"{result['backup_path']} and session reset"
+        )
+    else:
+        print(
+            f"[✓] Session repaired ({args.session}); normalized valid JSON "
+            f"changed={result['changed']}"
+        )
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -660,6 +693,7 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "web-chat": web_chat_command_run,
     "web-cleanup": web_cleanup_command_run,
     "migrate": migrate_command_run,
+    "repair": repair_command_run,
 }
 
 
@@ -749,6 +783,17 @@ def parser_build() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="Show what would be migrated without writing files",
+    )
+
+    p_repair = subparsers.add_parser(
+        "repair",
+        help="Repair one session file conservatively",
+    )
+    p_repair.add_argument("--session", default=None, help="Session name")
+    p_repair.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be repaired without writing files",
     )
 
     return parser

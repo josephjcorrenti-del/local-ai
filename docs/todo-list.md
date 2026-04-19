@@ -176,7 +176,7 @@ v6 phase 1.1 - GitHub Actions
 [x] add minimal GitHub Actions workflow for portable test checks
 
 v6 phase 2 - session robustness
-[~] add explicit repair/migrate command for session files
+[x] add explicit repair/migrate command for session files
 
 v6 phase 3 - archive strategy review
 [ ] revisit separate storage only if chat JSONs need archiving or cold storage
