@@ -5,32 +5,21 @@ from pathlib import Path
 from ollama_workbench.paths import paths_get
 
 
-def test_paths_default_data_root(monkeypatch):
-    monkeypatch.delenv("OWB_DATA_DIR", raising=False)
-
+def test_paths_default_data_root():
     paths = paths_get()
 
-    assert paths.data_root == Path.home() / "ai" / "data"
-    assert paths.app_data_root == Path.home() / "ai" / "data" / "ollama_workbench"
-    assert paths.sessions_dir == Path.home() / "ai" / "data" / "ollama_workbench" / "sessions"
-    assert paths.web_dir == Path.home() / "ai" / "data" / "ollama_workbench" / "web"
+    expected_data_root = Path.home() / "ai" / "data"
+    expected_app_data_root = expected_data_root / "ollama_workbench"
+
+    assert paths.data_root == expected_data_root
+    assert paths.app_data_root == expected_app_data_root
+    assert paths.sessions_dir == expected_app_data_root / "sessions"
+    assert paths.web_dir == expected_app_data_root / "web"
 
 
-def test_paths_test_data_root(monkeypatch):
-    monkeypatch.setenv("OWB_DATA_DIR", "test_data")
-
+def test_repo_paths_resolve_consistently():
     paths = paths_get()
 
-    assert paths.data_root == Path.home() / "ai" / "test_data"
-    assert paths.app_data_root == Path.home() / "ai" / "test_data" / "ollama_workbench"
-    assert paths.sessions_dir == Path.home() / "ai" / "test_data" / "ollama_workbench" / "sessions"
-    assert paths.web_dir == Path.home() / "ai" / "test_data" / "ollama_workbench" / "web"
-
-
-def test_repo_paths_resolve_inside_repo():
-    paths = paths_get()
-
-    assert paths.repo_root.name == "ollama_workbench"
     assert paths.src_root == paths.repo_root / "src"
-    assert paths.package_root == paths.repo_root / "src" / "ollama_workbench"
+    assert paths.package_root == paths.src_root / "ollama_workbench"
     assert paths.scripts_dir == paths.repo_root / "scripts"

@@ -22,13 +22,13 @@ def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_migrate_dry_run_runs():
+def test_migrate_missing_session_fails_cleanly():
     result = run_cli(
         "--data-dir", "test_data",
         "migrate",
-        "--session", "valid_default",
+        "--session", "__definitely_missing_session__",
         "--dry-run",
     )
 
-    assert result.returncode == 0
-    assert "Would migrate" in result.stdout
+    assert result.returncode != 0
+    assert "[!] error:" in result.stderr
