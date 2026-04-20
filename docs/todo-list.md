@@ -193,8 +193,11 @@ v7 phase 2 - explicit search workflows
 phase 2a
 [x] add web-search by query
 
-phase 2b
-[ ] support multi-source web-chat
+phase 2b - multi-source web-chat
+[ ] extend web-chat to accept --query as an alternative to --url
+[ ] run web-search when --query is used
+[ ] combine fetched artifacts into one bounded prompt
+[ ] print which sources/artifacts were used
 
 v8 - observability / ELK
 
@@ -269,6 +272,8 @@ CLI cleanup
 
 Web.py
 [ ] add search engine(s) to config
+[ ] --query is slow
+[ ] add content truncation / windowing per source       
 
 File system
 [ ] read file system with explicit approval
