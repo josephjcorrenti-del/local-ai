@@ -66,14 +66,56 @@ def _html_title_get(html_text: str) -> str | None:
 
 
 def _html_text_extract(html_text: str) -> str:
-    """Extract normalized plain text content from HTML."""
+    """Extract normalized plain text content from HTML with basic structure."""
+
+    # Remove non-content blocks
     text = re.sub(r"(?is)<script[^>]*>.*?</script>", " ", html_text)
     text = re.sub(r"(?is)<style[^>]*>.*?</style>", " ", text)
     text = re.sub(r"(?is)<noscript[^>]*>.*?</noscript>", " ", text)
+
+    # Convert block-level tags to newlines (opening + closing)
+    text = re.sub(r"(?i)<(p|div|h[1-6]|li|section|article)[^>]*>", "\n", text)
+    text = re.sub(r"(?i)</(p|div|h[1-6]|li|section|article)>", "\n", text)
+    text = re.sub(r"(?i)<br[^>]*>", "\n", text)
+
+    # Remove all remaining tags
     text = re.sub(r"(?s)<[^>]+>", " ", text)
+
+    # Decode HTML entities
     text = unescape(text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
+
+    # Normalize whitespace but preserve line structure
+    lines = [re.sub(r"\s+", " ", line).strip() for line in text.split("\n")]
+
+    # Drop empty lines
+    lines = [line for line in lines if line]
+
+    # Deduplicate lines
+    seen = set()
+    deduped = []
+    for line in lines:
+        if line not in seen:
+            seen.add(line)
+            deduped.append(line)
+
+    # Drop duplicate title/header if repeated
+    if len(deduped) > 1:
+        first = deduped[0].lower()
+        second = deduped[1].lower()
+
+        if first == second or first.startswith(second) or second.startswith(first):
+            deduped = deduped[1:]
+
+    # Light sentence splitting for readability
+    expanded = []
+    for line in deduped:
+        parts = re.split(r"(?<=[.!?])\s+", line)
+        expanded.extend(parts)
+
+    # Final cleanup
+    final_lines = [line.strip() for line in expanded if line.strip()]
+
+    return "\n".join(final_lines)
 
 
 # WHY:

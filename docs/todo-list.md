@@ -186,7 +186,7 @@ v6 phase 3 - archive strategy review
 v7 - web search capability expansion
 
 v7 phase 1 - richer fetch behavior
-[ ] add richer extraction/cleaning strategies for fetched pages
+[x] add richer extraction/cleaning strategies for fetched pages
 
 v7 phase 2 - explicit search workflows
 [ ] add web-search by query
