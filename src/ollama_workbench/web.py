@@ -22,6 +22,7 @@ Design notes:
 import hashlib
 import json
 import re
+import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, UTC
 from html import unescape
@@ -195,6 +196,59 @@ def web_fetch(url: str) -> dict[str, Any]:
     )
 
     return artifact
+
+
+def web_search(query: str, limit: int = 3) -> list[dict[str, Any]]:
+    """Search the web and fetch top results as artifacts."""
+    log_event("web.search.start", url=query)
+
+    search_url = f"https://duckduckgo.com/html/?q={urllib.parse.quote(query)}"
+
+    req = urllib.request.Request(
+        search_url,
+        headers={"User-Agent": "ollama_workbench/0.1"},
+        method="GET",
+    )
+
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        html = resp.read().decode("utf-8", errors="replace")
+
+    debug_path = paths_get().web_dir / "search_debug.html"
+    debug_path.write_text(html, encoding="utf-8")
+
+    raw_links = re.findall(
+        r'href="[^"]*uddg=([^"&]+)',
+        html,
+    )
+
+    links = []
+    for encoded in raw_links:
+        url = urllib.parse.unquote(encoded)
+
+        # basic sanity filter
+        if url.startswith("http"):
+            links.append(url)
+
+    results = []
+    seen = set()
+
+    for url in links:
+        if url in seen:
+            continue
+        seen.add(url)
+
+        try:
+            artifact = web_fetch(url)
+            results.append(artifact)
+        except Exception:
+            continue
+
+        if len(results) >= limit:
+            break
+
+    log_event("web.search.ready", url=query)
+
+    return results
 
 
 def web_artifact_load(path: str) -> dict[str, Any]:

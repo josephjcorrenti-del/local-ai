@@ -51,7 +51,7 @@ from ollama_workbench.runtime import (
 )
 from ollama_workbench.schemas import PING_SCHEMA
 from ollama_workbench.tools import TOOL_DEFS, TOOL_REGISTRY
-from ollama_workbench.web import web_fetch, web_artifact_load, web_cleanup
+from ollama_workbench.web import web_artifact_load, web_cleanup, web_fetch, web_search
 
 
 def prompt_run(user_prompt: str) -> None:
@@ -565,6 +565,21 @@ def web_fetch_command_run(args: argparse.Namespace) -> None:
     print(preview)
 
 
+def web_search_command_run(args: argparse.Namespace) -> None:
+    results = web_search(args.query, args.limit)
+
+    print(f"query: {args.query}")
+    print(f"results: {len(results)}")
+    print()
+
+    for i, artifact in enumerate(results, 1):
+        print(f"[{i}]")
+        print(f"title: {artifact.get('title') or '(none)'}")
+        print(f"url: {artifact['url']}")
+        print(f"artifact_path: {artifact['artifact_path']}")
+        print()
+
+
 def web_chat_command_run(args: argparse.Namespace) -> None:
     """Answer a question using content from a single fetched URL."""
     artifact = web_fetch(args.url)
@@ -690,6 +705,7 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "summarize": summarize_command_run,
     "doctor": doctor_command_run,
     "web-fetch": web_fetch_command_run,
+    "web-search": web_search_command_run,
     "web-chat": web_chat_command_run,
     "web-cleanup": web_cleanup_command_run,
     "migrate": migrate_command_run,
@@ -749,6 +765,13 @@ def parser_build() -> argparse.ArgumentParser:
         help="Fetch one explicit URL and save a web artifact",
     )
     p_web_fetch.add_argument("url", help="URL to fetch")
+
+    p_web_search = subparsers.add_parser(
+        "web-search",
+        help="Search the web and fetch top results",
+    )
+    p_web_search.add_argument("query", help="Search query")
+    p_web_search.add_argument("--limit", type=int, default=3, help="Max results")
 
     p_web_chat = subparsers.add_parser(
         "web-chat",

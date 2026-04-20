@@ -189,7 +189,11 @@ v7 phase 1 - richer fetch behavior
 [x] add richer extraction/cleaning strategies for fetched pages
 
 v7 phase 2 - explicit search workflows
-[ ] add web-search by query
+
+phase 2a
+[x] add web-search by query
+
+phase 2b
 [ ] support multi-source web-chat
 
 v8 - observability / ELK
@@ -264,7 +268,7 @@ CLI cleanup
 [ ] standardize command handler/docstring shape where helpful
 
 Web.py
-[ ] rename web.py to web_search.py
+[ ] add search engine(s) to config
 
 File system
 [ ] read file system with explicit approval
