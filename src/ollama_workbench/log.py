@@ -49,6 +49,8 @@ from datetime import UTC, datetime
 import json
 from typing import Any
 
+from ollama_workbench.paths import paths_get
+
 
 def log_timestamp_now_get() -> str:
     """Return current UTC timestamp in log format."""
@@ -66,7 +68,7 @@ def log_event(
     url: str | None = None,
     error: str | None = None,
 ) -> None:
-    """Emit one structured log event as a single JSON line to stdout."""
+    """Emit one structured log event as NDJSON to stdout and file."""
     payload: dict[str, Any] = {
         "ts": log_timestamp_now_get(),
         "level": level,
@@ -79,4 +81,14 @@ def log_event(
         "error": error,
     }
 
-    print(json.dumps(payload, ensure_ascii=False))
+    line = json.dumps(payload, ensure_ascii=False)
+
+    # stdout (existing behavior)
+    print(line)
+
+    # file (new behavior)
+    paths = paths_get()
+    paths.logs_dir.mkdir(parents=True, exist_ok=True)
+
+    with paths.run_log_path.open("a", encoding="utf-8") as fh:
+        fh.write(line + "\n")

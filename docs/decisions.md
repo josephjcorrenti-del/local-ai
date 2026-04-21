@@ -69,3 +69,20 @@
 - Bump patch for fixes/polish
 - Bump minor for meaningful new capabilities or workflow changes
 - Reserve 1.0.0 for a more stable, intentional CLI contract
+
+## Observability / ELK
+
+- `ollama_workbench` logs should remain explicit, local, and inspectable.
+- Structured app logs should be emitted as NDJSON.
+- `log.py` remains the single logging entrypoint.
+- Logging should stay stdout-visible for CLI traceability.
+- The same structured event payload may also be written to a local run log for Filebeat ingestion.
+- The initial runtime log path is:
+  `~/ai/data/ollama_workbench/logs/run.log`
+- ELK ingestion should mirror the existing local pattern:
+  app -> NDJSON file -> Filebeat -> Elasticsearch -> Kibana
+- Initial ELK identity fields for this app should be:
+  - `service.name = ollama-workbench`
+  - `event.dataset = ollama-workbench.runlog`
+- Prefer simple field mirroring and explicit mappings over introducing a fuller logging framework.
+- Do not break or redesign existing OpenVPN or python-lab ingestion to add `ollama_workbench`.

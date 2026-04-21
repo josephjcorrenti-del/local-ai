@@ -39,6 +39,8 @@ class AppPaths:
     app_data_root: Path
     sessions_dir: Path
     web_dir: Path
+    logs_dir: Path
+    run_log_path: Path
 
 
 # WHY:
@@ -62,6 +64,8 @@ def paths_get() -> AppPaths:
     ai_status_script = scripts_dir / CONFIG.ai_status_script_name
 
     web_dir = app_data_root / "web"
+    logs_dir = app_data_root / "logs"
+    run_log_path = logs_dir / "run.log"
 
     return AppPaths(
         repo_root=repo_root,
@@ -75,4 +79,6 @@ def paths_get() -> AppPaths:
         app_data_root=app_data_root,
         sessions_dir=sessions_dir,
         web_dir=web_dir,
+        logs_dir=logs_dir,
+        run_log_path=run_log_path,
     )
