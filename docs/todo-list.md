@@ -208,22 +208,23 @@ v8 phase 1 - ollama_workbench ELK integration
 [x] verify log directory/file creation behavior is simple and local
 
 v8 phase 2 - filebeat wiring
-[ ] add docker volume mount for ollama_workbench run.log into filebeat container
-[ ] add filebeat filestream input for ollama_workbench run.log
-[ ] assign service.name=ollama-workbench
-[ ] assign event.dataset=ollama-workbench.runlog
-[ ] keep existing openvpn/python-lab ingestion unchanged
+[x] add docker volume mount for ollama_workbench run.log into filebeat container
+[x] add filebeat filestream input for ollama_workbench run.log
+[x] assign service.name=ollama-workbench
+[x] assign event.dataset=ollama-workbench.runlog
+[x] keep existing openvpn/python-lab ingestion unchanged
 
 v8 phase 3 - field mapping / Kibana shape
-[ ] map ollama_workbench fields into Kibana-friendly columns
-[ ] keep/service mirror columns where useful: service.name, event.dataset, log.level, log.logger, log.origin.function, log.origin.file.name, labels.run_id, event.action, message
+[x] map ollama_workbench fields into Kibana-friendly columns
+[x] keep/service mirror columns where useful: service.name, event.dataset, log.level, log.logger, log.origin.function, log.origin.file.name, labels.run_id, event.action, message
 [ ] decide which existing ollama_workbench fields stay first-class: command, session, model, path, url, error
-[ ] verify fields are searchable and aggregatable in Discover
+[x] verify fields are searchable and aggregatable in Discover
 
 v8 phase 4 - verification
-[ ] run explicit CLI smoke commands and verify ingestion in Elasticsearch
-[ ] verify Discover filters for event.dataset:"ollama-workbench.runlog"
-[ ] define recommended Discover column layout for ollama_workbench
+[x] run explicit CLI smoke commands and verify ingestion in Elasticsearch
+[x] verify Discover filters for event.dataset:"ollama-workbench.runlog"
+[x] define initial Discover column layout for ollama_workbench
+[ ] refine saved Discover views per service / use case
 [ ] add sample KQL queries for common operator views
 
 v8 phase 5 - follow-up design review

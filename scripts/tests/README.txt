@@ -9,3 +9,7 @@ Current intent:
 - status_test.sh: verify --data-dir switches resolved paths
 - fixtures_check.sh: verify expected test fixture files exist
 - ollama_workbench_smoketest.sh: broader end-to-end smoke pass
+
+Test process:
+- scripts/tests/run_all.sh = full local validation
+- GitHub Actions = portable Python subset only

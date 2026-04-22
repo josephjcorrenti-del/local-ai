@@ -46,8 +46,13 @@ Current ollama_workbench event shape:
 """
 
 from datetime import UTC, datetime
+import inspect
 import json
+import uuid
+import time
 from typing import Any
+
+_run_id = f"{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
 
 from ollama_workbench.paths import paths_get
 
@@ -60,7 +65,7 @@ def log_timestamp_now_get() -> str:
 def log_event(
     event: str,
     *,
-    level: str = "info",
+    level: str = "INFO",
     command: str | None = None,
     session: str | None = None,
     model: str | None = None,
@@ -68,25 +73,33 @@ def log_event(
     url: str | None = None,
     error: str | None = None,
 ) -> None:
-    """Emit one structured log event as NDJSON to stdout and file."""
+    frame = inspect.stack()[1]
+    fn_name = frame.function
+    module_name = frame.filename.split("/")[-1].replace(".py", "")
+
     payload: dict[str, Any] = {
-        "ts": log_timestamp_now_get(),
-        "level": level,
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "level": level.upper(),
+        "module": module_name,
+        "logger": module_name,
+        "message": event,
+        "run_id": _run_id,
         "event": event,
-        "command": command,
-        "session": session,
-        "model": model,
-        "path": path,
-        "url": url,
-        "error": error,
+        "fn": fn_name,
+        "params": {
+            "command": command,
+            "session": session,
+            "model": model,
+            "path": path,
+            "url": url,
+            "error": error,
+        },
     }
 
     line = json.dumps(payload, ensure_ascii=False)
 
-    # stdout (existing behavior)
     print(line)
 
-    # file (new behavior)
     paths = paths_get()
     paths.logs_dir.mkdir(parents=True, exist_ok=True)
 

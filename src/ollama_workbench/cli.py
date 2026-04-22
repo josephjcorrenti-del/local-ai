@@ -581,15 +581,29 @@ def web_search_command_run(args: argparse.Namespace) -> None:
 
 
 def web_chat_command_run(args: argparse.Namespace) -> None:
-    """Answer a question using content from a single fetched URL."""
-    artifact = web_fetch(args.url)
-    content_text = artifact.get("content_text", "")
+    """Answer a question using one explicit URL or a search query."""
+    if args.url:
+        artifact = web_fetch(args.url)
+        artifacts = [artifact]
+    elif args.query:
+        artifacts = web_search(args.query, args.limit)
+        if not artifacts:
+            raise RuntimeError(f"No web results found for query: {args.query}")
+    else:
+        raise RuntimeError("web-chat requires either --url or --query")
+
+    combined_parts: list[str] = []
+    for i, artifact in enumerate(artifacts, 1):
+        combined_parts.append(
+            f"[Source {i}]\n"
+            f"URL: {artifact['url']}\n"
+            f"Title: {artifact.get('title') or '(none)'}\n\n"
+            f"Page content:\n{artifact.get('content_text', '')}"
+        )
 
     prompt = (
         f"Question: {args.question}\n\n"
-        f"URL: {artifact['url']}\n"
-        f"Title: {artifact.get('title') or '(none)'}\n\n"
-        f"Page content:\n{content_text}"
+        f"{chr(10).join(combined_parts)}"
     )
 
     ollama_ensure_running()
@@ -602,7 +616,7 @@ def web_chat_command_run(args: argparse.Namespace) -> None:
                 "role": "system",
                 "content": (
                     "Answer the user's question using only the provided web page content. "
-                    "Be concise and say when the page does not contain enough information."
+                    "Be concise and say when the provided pages do not contain enough information."
                 ),
             },
             {
@@ -615,9 +629,19 @@ def web_chat_command_run(args: argparse.Namespace) -> None:
     result = ollama_chat(payload)
     answer = result["message"]["content"]
 
-    print(f"url: {artifact['url']}")
-    print(f"artifact_path: {artifact['artifact_path']}")
+    print(f"question: {args.question}")
+    if args.url:
+        print("mode: single-url")
+    else:
+        print(f"mode: query-search ({len(artifacts)} source(s))")
     print()
+
+    for i, artifact in enumerate(artifacts, 1):
+        print(f"[{i}]")
+        print(f"url: {artifact['url']}")
+        print(f"artifact_path: {artifact['artifact_path']}")
+        print()
+
     print(answer)
 
 
@@ -775,10 +799,20 @@ def parser_build() -> argparse.ArgumentParser:
 
     p_web_chat = subparsers.add_parser(
         "web-chat",
-        help="Answer a question using one explicit fetched URL",
+        help="Answer a question using one explicit URL or a web search query",
     )
     p_web_chat.add_argument("question", help="Question to answer")
-    p_web_chat.add_argument("--url", required=True, help="URL to fetch and use")
+
+    source_group = p_web_chat.add_mutually_exclusive_group(required=True)
+    source_group.add_argument("--url", help="URL to fetch and use")
+    source_group.add_argument("--query", help="Search query to fetch and use")
+
+    p_web_chat.add_argument(
+        "--limit",
+        type=int,
+        default=3,
+        help="Max search results when using --query (default: 3)",
+    )
 
     p_web_cleanup = subparsers.add_parser(
         "web-cleanup",

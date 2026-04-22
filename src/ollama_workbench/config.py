@@ -21,6 +21,7 @@ Design notes:
 
 from dataclasses import dataclass
 from pathlib import Path
+import os
 
 
 @dataclass(frozen=True)
@@ -38,7 +39,6 @@ class AppConfig:
     ai_status_script_name: str = "ai_status.sh"
 
     ai_root: Path = Path.home() / "ai"
-    data_root: Path = ai_root / "data"
 
     default_session_name: str = "default"
     memory_turn_limit: int = 8
@@ -52,5 +52,10 @@ class AppConfig:
     summary_inactive_minutes: int = 30
     summary_max_input_chars: int = 600
 
+    @property
+    def data_root(self) -> Path:
+        """Resolve the active data root from an explicit CLI/env selection."""
+        data_dir = os.environ.get("OWB_DATA_DIR", "data")
+        return self.ai_root / data_dir
 
 CONFIG = AppConfig()
