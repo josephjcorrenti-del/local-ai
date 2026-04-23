@@ -30,7 +30,8 @@ fi
 echo
 echo "=== verifying output ==="
 
-if grep -q "session file malformed (malformed_bad_session)" /tmp/doctor_test.out; then
+if grep -q '"message": "doctor.check.fail"' /tmp/doctor_test.out \
+  && grep -q '"session": "malformed_bad_session"' /tmp/doctor_test.out; then
   echo "[✓] malformed session detected"
 else
   echo "[✗] malformed session NOT detected"
@@ -38,7 +39,8 @@ else
   exit 1
 fi
 
-if grep -q "session load ok (valid_default)" /tmp/doctor_test.out; then
+if grep -q '"message": "doctor.check.ok"' /tmp/doctor_test.out \
+  && grep -q '"session": "valid_default"' /tmp/doctor_test.out; then
   echo "[✓] valid sessions still processed"
 else
   echo "[✗] valid sessions NOT processed"
