@@ -11,55 +11,66 @@ Responsibilities:
 - Provide a stable, flat event shape for traceability
 
 Design constraints:
-- No file logging, batching, or async behavior
 - No hidden configuration or environment-driven behavior
-- Allow null fields in first pass where values are not yet defined
-- Keep event structure simple and easy to extend later (ELK phase)
-
-Old lab-style NDJSON reference (kept briefly during transition):
-# {
-#   "ts": "...",
-#   "level": "INFO",
-#   "module": "...",
-#   "logger": "...",
-#   "message": "...",
-#   "run_id": "...",
-#   "event": "...",
-#   "fn": "...",
-#   "elapsed_ms": 12,
-#   "params": {...},
-#   "detail": {...}
-# }
-
-Current ollama_workbench event shape:
-# {
-#   "ts": "2026-04-15T20:10:00Z",
-#   "level": "info",
-#   "event": "ollama.ensure_running.start",
-#   "command": "chat",
-#   "session": "scratch",
-#   "model": null,
-#   "path": null,
-#   "url": null,
-#   "error": null
-# }
+- Keep event structure simple and easy to extend later
+- Keep concrete event names stable
+- Add normalized optional fields without breaking existing queries
 """
 
 from datetime import UTC, datetime
 import inspect
 import json
-import uuid
 import time
+import uuid
+from pathlib import Path
 from typing import Any
 
-_run_id = f"{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
-
 from ollama_workbench.paths import paths_get
+
+_run_id = f"{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
 
 
 def log_timestamp_now_get() -> str:
     """Return current UTC timestamp in log format."""
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def run_id_get() -> str:
+    """Return the current process run identifier."""
+    return _run_id
+
+
+def _module_name_get(frame_info: inspect.FrameInfo) -> str:
+    """Derive a stable module-style name from the caller filename."""
+    return Path(frame_info.filename).stem
+
+
+def _params_build(
+    *,
+    command: str | None,
+    session: str | None,
+    model: str | None,
+    path: str | None,
+    url: str | None,
+    error: str | None,
+) -> dict[str, Any]:
+    """Build params payload, omitting empty values to reduce noise."""
+    params: dict[str, Any] = {}
+
+    if command is not None:
+        params["command"] = command
+    if session is not None:
+        params["session"] = session
+    if model is not None:
+        params["model"] = model
+    if path is not None:
+        params["path"] = path
+    if url is not None:
+        params["url"] = url
+    if error is not None:
+        params["error"] = error
+
+    return params
 
 
 def log_event(
@@ -72,29 +83,48 @@ def log_event(
     path: str | None = None,
     url: str | None = None,
     error: str | None = None,
+    event_outcome: str | None = None,
+    error_message: str | None = None,
+    error_type: str | None = None,
+    elapsed_ms: int | None = None,
 ) -> None:
-    frame = inspect.stack()[1]
-    fn_name = frame.function
-    module_name = frame.filename.split("/")[-1].replace(".py", "")
+    """Emit one structured log event as NDJSON to stdout and run.log."""
+    frame_info = inspect.stack()[1]
+    fn_name = frame_info.function
+    module_name = _module_name_get(frame_info)
 
     payload: dict[str, Any] = {
-        "ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "ts": log_timestamp_now_get(),
         "level": level.upper(),
         "module": module_name,
         "logger": module_name,
         "message": event,
-        "run_id": _run_id,
+        "run_id": run_id_get(),
         "event": event,
         "fn": fn_name,
-        "params": {
-            "command": command,
-            "session": session,
-            "model": model,
-            "path": path,
-            "url": url,
-            "error": error,
-        },
     }
+
+    params = _params_build(
+        command=command,
+        session=session,
+        model=model,
+        path=path,
+        url=url,
+        error=error,
+    )
+    payload["params"] = params
+
+    if event_outcome is not None:
+        payload["event_outcome"] = event_outcome
+
+    if error_message is not None:
+        payload["error_message"] = error_message
+
+    if error_type is not None:
+        payload["error_type"] = error_type
+
+    if elapsed_ms is not None:
+        payload["elapsed_ms"] = elapsed_ms
 
     line = json.dumps(payload, ensure_ascii=False)
 

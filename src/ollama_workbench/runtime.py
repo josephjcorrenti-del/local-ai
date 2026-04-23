@@ -39,6 +39,11 @@ from ollama_workbench.log import log_event
 from ollama_workbench.paths import paths_get
 
 
+def _elapsed_ms_get(start_ts: float) -> int:
+    """Return elapsed time in whole milliseconds."""
+    return int((time.perf_counter() - start_ts) * 1000)
+
+
 def _ollama_get(path: str) -> dict[str, Any]:
     """Perform a GET request to the Ollama API and return parsed JSON."""
     url = f"{CONFIG.ollama_base_url}{path}"
@@ -50,27 +55,52 @@ def _ollama_get(path: str) -> dict[str, Any]:
         url=url,
     )
 
+    started_at = time.perf_counter()
+
     try:
         with urllib.request.urlopen(req, timeout=CONFIG.request_timeout_s) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            result = json.loads(resp.read().decode("utf-8"))
+
+        log_event(
+            "ollama.http.get.ready",
+            path=path,
+            url=url,
+            event_outcome="success",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
+        return result
+
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")
+        elapsed_ms = _elapsed_ms_get(started_at)
+
         log_event(
             "ollama.http.get.error",
-            level="error",
+            level="ERROR",
             path=path,
             url=url,
+            event_outcome="failure",
+            error_message=f"HTTP {exc.code}: {body}",
+            error_type=type(exc).__name__,
             error=f"HTTP {exc.code}: {body}",
+            elapsed_ms=elapsed_ms,
         )
         raise RuntimeError(f"Ollama HTTP error {exc.code}: {body}") from exc
+
     except urllib.error.URLError as exc:
         reason = getattr(exc, "reason", exc)
+        elapsed_ms = _elapsed_ms_get(started_at)
+
         log_event(
             "ollama.http.get.error",
-            level="error",
+            level="ERROR",
             path=path,
             url=url,
+            event_outcome="failure",
+            error_message=str(reason),
+            error_type=type(exc).__name__,
             error=f"Connection failed: {reason}",
+            elapsed_ms=elapsed_ms,
         )
         raise RuntimeError(
             f"Failed to connect to Ollama at {CONFIG.ollama_base_url}"
@@ -78,23 +108,26 @@ def _ollama_get(path: str) -> dict[str, Any]:
 
 
 def _ollama_post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Perform a POST request to the Ollama API and return parsed JSON."""
+    url = f"{CONFIG.ollama_base_url}{path}"
+    model_name = payload.get("model")
+    model = model_name if isinstance(model_name, str) else None
+
     try:
-        """Perform a POST request to the Ollama API and return parsed JSON."""
-        url = f"{CONFIG.ollama_base_url}{path}"
         data = json.dumps(payload).encode("utf-8")
-    except urllib.error.URLError as exc:
-        reason = getattr(exc, "reason", exc)
+    except (TypeError, ValueError) as exc:
         log_event(
             "ollama.http.post.error",
-            level="error",
+            level="ERROR",
             path=path,
             url=url,
             model=model,
-            error=f"Connection failed: {reason}",
+            event_outcome="failure",
+            error_message=str(exc),
+            error_type=type(exc).__name__,
+            error="Failed to encode POST payload as JSON",
         )
-        raise RuntimeError(
-            f"Failed to connect to Ollama at {CONFIG.ollama_base_url}"
-        ) from exc
+        raise RuntimeError("Failed to encode Ollama request payload as JSON") from exc
 
     req = urllib.request.Request(
         url,
@@ -103,9 +136,6 @@ def _ollama_post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
         method="POST",
     )
 
-    model_name = payload.get("model")
-    model = model_name if isinstance(model_name, str) else None
-
     log_event(
         "ollama.http.post",
         path=path,
@@ -113,20 +143,59 @@ def _ollama_post(path: str, payload: dict[str, Any]) -> dict[str, Any]:
         model=model,
     )
 
+    started_at = time.perf_counter()
+
     try:
         with urllib.request.urlopen(req, timeout=CONFIG.request_timeout_s) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
+            result = json.loads(resp.read().decode("utf-8"))
+
         log_event(
-            "ollama.http.post.error",
-            level="error",
+            "ollama.http.post.ready",
             path=path,
             url=url,
             model=model,
+            event_outcome="success",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
+        return result
+
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        elapsed_ms = _elapsed_ms_get(started_at)
+
+        log_event(
+            "ollama.http.post.error",
+            level="ERROR",
+            path=path,
+            url=url,
+            model=model,
+            event_outcome="failure",
+            error_message=f"HTTP {exc.code}: {body}",
+            error_type=type(exc).__name__,
             error=f"HTTP {exc.code}: {body}",
+            elapsed_ms=elapsed_ms,
         )
         raise RuntimeError(f"Ollama HTTP error {exc.code}: {body}") from exc
+
+    except urllib.error.URLError as exc:
+        reason = getattr(exc, "reason", exc)
+        elapsed_ms = _elapsed_ms_get(started_at)
+
+        log_event(
+            "ollama.http.post.error",
+            level="ERROR",
+            path=path,
+            url=url,
+            model=model,
+            event_outcome="failure",
+            error_message=str(reason),
+            error_type=type(exc).__name__,
+            error=f"Connection failed: {reason}",
+            elapsed_ms=elapsed_ms,
+        )
+        raise RuntimeError(
+            f"Failed to connect to Ollama at {CONFIG.ollama_base_url}"
+        ) from exc
 
 
 def ollama_version_get() -> dict[str, Any]:
@@ -170,33 +239,73 @@ def ollama_is_healthy() -> bool:
 def ai_stack_start() -> None:
     """Start the local AI stack using the configured helper script."""
     script_path = paths_get().ai_start_script
+    started_at = time.perf_counter()
 
     log_event(
         "ai.stack.start",
         path=str(script_path),
     )
 
-    subprocess.run(
-        [str(script_path)],
-        check=True,
-        text=True,
-    )
+    try:
+        subprocess.run(
+            [str(script_path)],
+            check=True,
+            text=True,
+        )
+        log_event(
+            "ai.stack.ready",
+            path=str(script_path),
+            event_outcome="success",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
+    except subprocess.CalledProcessError as exc:
+        log_event(
+            "ai.stack.error",
+            level="ERROR",
+            path=str(script_path),
+            event_outcome="failure",
+            error_message=str(exc),
+            error_type=type(exc).__name__,
+            error="AI stack start script failed",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
+        raise
 
 
 def ai_status_show() -> None:
     """Display the current status of the local AI stack."""
     script_path = paths_get().ai_status_script
+    started_at = time.perf_counter()
 
     log_event(
         "ai.stack.status",
         path=str(script_path),
     )
 
-    subprocess.run(
-        [str(script_path)],
-        check=True,
-        text=True,
-    )
+    try:
+        subprocess.run(
+            [str(script_path)],
+            check=True,
+            text=True,
+        )
+        log_event(
+            "ai.stack.status.ready",
+            path=str(script_path),
+            event_outcome="success",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
+    except subprocess.CalledProcessError as exc:
+        log_event(
+            "ai.stack.status.error",
+            level="ERROR",
+            path=str(script_path),
+            event_outcome="failure",
+            error_message=str(exc),
+            error_type=type(exc).__name__,
+            error="AI status script failed",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
+        raise
 
 
 # WHY:
@@ -205,10 +314,16 @@ def ai_status_show() -> None:
 # This keeps CLI usage smooth while still failing fast if startup does not succeed.
 def ollama_ensure_running() -> None:
     """Ensure Ollama is running, starting it if necessary."""
+    started_at = time.perf_counter()
+
     log_event("ollama.ensure_running.check")
 
     if ollama_is_healthy():
-        log_event("ollama.ensure_running.ready")
+        log_event(
+            "ollama.ensure_running.ready",
+            event_outcome="success",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
         return
 
     log_event("ollama.ensure_running.start")
@@ -217,21 +332,31 @@ def ollama_ensure_running() -> None:
 
     for _ in range(20):
         if ollama_is_healthy():
-            log_event("ollama.ensure_running.ready")
+            log_event(
+                "ollama.ensure_running.ready",
+                event_outcome="success",
+                elapsed_ms=_elapsed_ms_get(started_at),
+            )
             print("[✓] Ollama is healthy")
             return
         time.sleep(1)
 
     log_event(
         "ollama.ensure_running.timeout",
-        level="error",
+        level="ERROR",
+        event_outcome="failure",
+        error_message="Ollama did not become healthy after startup",
+        error_type="RuntimeError",
         error="Ollama did not become healthy after startup",
+        elapsed_ms=_elapsed_ms_get(started_at),
     )
     raise RuntimeError("Ollama did not become healthy after startup")
 
 
 def ollama_model_ensure_available(model_name: str) -> None:
     """Ensure the given model is available locally, raising if not."""
+    started_at = time.perf_counter()
+
     log_event(
         "ollama.model.ensure_available.check",
         model=model_name,
@@ -243,23 +368,28 @@ def ollama_model_ensure_available(model_name: str) -> None:
         log_event(
             "ollama.model.ensure_available.ready",
             model=model_name,
+            event_outcome="success",
+            elapsed_ms=_elapsed_ms_get(started_at),
         )
         return
 
-    log_event(
-        "ollama.model.ensure_available.missing",
-        level="error",
-        model=model_name,
-        error=(
-            f"Configured model '{model_name}' is not available in local Ollama. "
-            f"Pull it explicitly with: ollama pull {model_name}"
-        ),
-    )
-
-    raise RuntimeError(
+    error_text = (
         f"Configured model '{model_name}' is not available in local Ollama. "
         f"Pull it explicitly with: ollama pull {model_name}"
     )
+
+    log_event(
+        "ollama.model.ensure_available.missing",
+        level="ERROR",
+        model=model_name,
+        event_outcome="failure",
+        error_message=error_text,
+        error_type="RuntimeError",
+        error=error_text,
+        elapsed_ms=_elapsed_ms_get(started_at),
+    )
+
+    raise RuntimeError(error_text)
 
 
 # WHY:
@@ -268,6 +398,8 @@ def ollama_model_ensure_available(model_name: str) -> None:
 # surfacing later as API errors.
 def ollama_chat(payload: dict[str, Any]) -> dict[str, Any]:
     """Send a chat request to Ollama and return the response JSON."""
+    started_at = time.perf_counter()
+
     model_name = payload.get("model")
     model = model_name if isinstance(model_name, str) else None
 
@@ -280,7 +412,17 @@ def ollama_chat(payload: dict[str, Any]) -> dict[str, Any]:
     if isinstance(model_name, str):
         ollama_model_ensure_available(model_name)
 
-    return _ollama_post("/api/chat", payload)
+    result = _ollama_post("/api/chat", payload)
+
+    log_event(
+        "ollama.chat.ready",
+        model=model,
+        path="/api/chat",
+        event_outcome="success",
+        elapsed_ms=_elapsed_ms_get(started_at),
+    )
+
+    return result
 
 
 # WHY:
@@ -289,6 +431,7 @@ def ollama_chat(payload: dict[str, Any]) -> dict[str, Any]:
 # flows flexible without duplicating request logic.
 def ollama_generate(prompt: str, model_name: str | None = None) -> str:
     """Generate a completion from Ollama using the given prompt."""
+    started_at = time.perf_counter()
     model = model_name or CONFIG.chat_model_name
 
     log_event(
@@ -308,6 +451,21 @@ def ollama_generate(prompt: str, model_name: str | None = None) -> str:
     response = result.get("response", "")
 
     if not isinstance(response, str):
+        log_event(
+            "ollama.generate.ready",
+            model=model,
+            path="/api/generate",
+            event_outcome="success",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
         return ""
+
+    log_event(
+        "ollama.generate.ready",
+        model=model,
+        path="/api/generate",
+        event_outcome="success",
+        elapsed_ms=_elapsed_ms_get(started_at),
+    )
 
     return response

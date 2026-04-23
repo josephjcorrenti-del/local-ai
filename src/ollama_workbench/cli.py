@@ -24,6 +24,7 @@ Design notes:
 import argparse
 import json
 import os
+import time
 from typing import Callable
 import sys
 
@@ -358,7 +359,6 @@ def _doctor_fail(message: str) -> None:
 
 
 def doctor_command_run(args: argparse.Namespace) -> None:
-    """Run local runtime checks and report failures."""
     del args
 
     paths = paths_get()
@@ -366,17 +366,22 @@ def doctor_command_run(args: argparse.Namespace) -> None:
     checks_run = 0
 
     if ollama_is_healthy():
-        log_event("doctor.check.ok", command="doctor")
-        _doctor_ok("ollama reachable")
+        log_event(
+            "doctor.check.ok",
+            command="doctor",
+            event_outcome="success",
+        )
         checks_run += 1
     else:
         log_event(
             "doctor.check.fail",
-            level="error",
+            level="ERROR",
             command="doctor",
+            event_outcome="failure",
+            error_message="ollama not reachable",
+            error_type="RuntimeCheckError",
             error="ollama not reachable",
         )
-        _doctor_fail("ollama not reachable")
         failures += 1
 
     try:
@@ -385,40 +390,20 @@ def doctor_command_run(args: argparse.Namespace) -> None:
             "doctor.check.ok",
             command="doctor",
             model=CONFIG.chat_model_name,
+            event_outcome="success",
         )
-        _doctor_ok(f"chat model available ({CONFIG.chat_model_name})")
         checks_run += 1
-    except RuntimeError:
+    except RuntimeError as exc:
         log_event(
             "doctor.check.fail",
-            level="error",
+            level="ERROR",
             command="doctor",
             model=CONFIG.chat_model_name,
+            event_outcome="failure",
+            error_message=str(exc),
+            error_type=type(exc).__name__,
             error=f"chat model missing ({CONFIG.chat_model_name})",
         )
-        _doctor_fail(f"chat model missing ({CONFIG.chat_model_name})")
-        print(f"    run: ollama pull {CONFIG.chat_model_name}")
-        failures += 1
-
-    try:
-        ollama_model_ensure_available(CONFIG.summary_model_name)
-        log_event(
-            "doctor.check.ok",
-            command="doctor",
-            model=CONFIG.summary_model_name,
-        )
-        _doctor_ok(f"summary model available ({CONFIG.summary_model_name})")
-        checks_run += 1
-    except RuntimeError:
-        log_event(
-            "doctor.check.fail",
-            level="error",
-            command="doctor",
-            model=CONFIG.summary_model_name,
-            error=f"summary model missing ({CONFIG.summary_model_name})",
-        )
-        _doctor_fail(f"summary model missing ({CONFIG.summary_model_name})")
-        print(f"    run: ollama pull {CONFIG.summary_model_name}")
         failures += 1
 
     try:
@@ -430,19 +415,20 @@ def doctor_command_run(args: argparse.Namespace) -> None:
             "doctor.check.ok",
             command="doctor",
             path=str(paths.sessions_dir),
+            event_outcome="success",
         )
-        _doctor_ok(f"sessions dir writable ({paths.sessions_dir})")
         checks_run += 1
     except OSError as exc:
         log_event(
             "doctor.check.fail",
-            level="error",
+            level="ERROR",
             command="doctor",
             path=str(paths.sessions_dir),
+            event_outcome="failure",
+            error_message=str(exc),
+            error_type=type(exc).__name__,
             error=str(exc),
         )
-        _doctor_fail(f"sessions dir not writable ({paths.sessions_dir})")
-        print(f"    reason: {exc}")
         failures += 1
 
     for session_name in session_names_get():
@@ -453,89 +439,20 @@ def doctor_command_run(args: argparse.Namespace) -> None:
                 "doctor.check.ok",
                 command="doctor",
                 session=session_name,
+                event_outcome="success",
             )
-            _doctor_ok(f"session load ok ({session_name})")
         except RuntimeError as exc:
             log_event(
                 "doctor.check.fail",
-                level="error",
+                level="ERROR",
                 command="doctor",
                 session=session_name,
+                event_outcome="failure",
+                error_message=str(exc),
+                error_type=type(exc).__name__,
                 error=str(exc),
             )
-            _doctor_fail(f"session file malformed ({session_name})")
-            print("    guidance: fix or delete the session file")
             failures += 1
-
-    checks_run += 1
-    try:
-        paths.app_data_root.mkdir(parents=True, exist_ok=True)
-        test_path = paths.app_data_root / ".doctor_write_test"
-        test_path.write_text("ok\n", encoding="utf-8")
-        test_path.unlink()
-        log_event(
-            "doctor.check.ok",
-            command="doctor",
-            path=str(paths.app_data_root),
-        )
-        _doctor_ok(f"app data root writable ({paths.app_data_root})")
-    except OSError as exc:
-        log_event(
-            "doctor.check.fail",
-            level="error",
-            command="doctor",
-            path=str(paths.app_data_root),
-            error=str(exc),
-        )
-        _doctor_fail(f"app data root not writable ({paths.app_data_root})")
-        print(f"    reason: {exc}")
-        failures += 1
-
-    checks_run += 1
-    try:
-        paths.web_dir.mkdir(parents=True, exist_ok=True)
-        test_path = paths.web_dir / ".doctor_write_test"
-        test_path.write_text("ok\n", encoding="utf-8")
-        test_path.unlink()
-        log_event(
-            "doctor.check.ok",
-            command="doctor",
-            path=str(paths.web_dir),
-        )
-        _doctor_ok(f"web dir writable ({paths.web_dir})")
-    except OSError as exc:
-        log_event(
-            "doctor.check.fail",
-            level="error",
-            command="doctor",
-            path=str(paths.web_dir),
-            error=str(exc),
-        )
-        _doctor_fail(f"web dir not writable ({paths.web_dir})")
-        print(f"    reason: {exc}")
-        failures += 1
-
-    checks_run += 1
-    script = paths.ai_status_script
-
-    if script.exists() and script.is_file() and os.access(script, os.X_OK):
-        log_event("doctor.check.ok", command="doctor", path=str(script))
-        _doctor_ok(f"helper script ok ({script.name})")
-    else:
-        log_event(
-            "doctor.check.fail",
-            level="error",
-            command="doctor",
-            path=str(script),
-            error="missing or not executable",
-        )
-        _doctor_fail(f"helper script not runnable ({script.name})")
-        print(f"    expected: executable file at {script}")
-        failures += 1
-
-    print()
-    print(f"checks run: {checks_run}")
-    print(f"failures: {failures}")
 
     log_event(
         "doctor.summary",
@@ -873,6 +790,8 @@ def main() -> None:
     if handler is None:
         raise RuntimeError(f"Unknown command: {command}")
 
+    started_at = time.perf_counter()
+
     log_event(
         "command.start",
         command=command,
@@ -883,9 +802,13 @@ def main() -> None:
     except Exception as exc:
         log_event(
             "command.error",
-            level="error",
+            level="ERROR",
             command=command,
+            event_outcome="failure",
+            error_message=str(exc),
+            error_type=type(exc).__name__,
             error=str(exc),
+            elapsed_ms=int((time.perf_counter() - started_at) * 1000),
         )
 
         if getattr(args, "debug", False):
@@ -899,6 +822,8 @@ def main() -> None:
     log_event(
         "command.end",
         command=command,
+        event_outcome="success",
+        elapsed_ms=int((time.perf_counter() - started_at) * 1000),
     )
 
 

@@ -235,6 +235,28 @@ v8 phase 5 - follow-up design review
     - collapse redundant health checks OR tag separately
     - preserve traceability
 
+v8.6 - logging polish
+
+phase 1 - raw app log contract
+[x] keep current fields unchanged
+[x] add event_outcome
+[x] add elapsed_ms
+[x] add error_message
+[x] add error_type
+
+phase 2 - filebeat mapping
+[x] map owb.event_outcome -> event.outcome
+[ ] decide whether to keep owb.elapsed_ms raw or also map to a standard field
+[x] map owb.error_message -> error.message
+[x] map owb.error_type -> error.type
+
+phase 3 - kibana verification
+[x] verify fields appear in Discover
+[x] verify fields are searchable
+[x] verify fields are aggregatable where expected
+[x] verify success/failure filters work
+[x] verify elapsed_ms is useful and not noisy
+
 v9 - integration and platform decisions
 
 v9 phase 1 - integration boundary
