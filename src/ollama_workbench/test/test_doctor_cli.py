@@ -17,27 +17,37 @@ def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
         [sys.executable, "-m", "ollama_workbench.cli", *args],
         cwd=REPO_ROOT,
         env=env,
-        text=True,
         capture_output=True,
+        text=True,
     )
 
 
-def test_doctor_runs_and_reports_summary():
+def test_doctor_runs_and_reports_summary() -> None:
     result = run_cli("doctor")
 
-    assert "checks run:" in result.stdout
-    assert "failures:" in result.stdout
+    # In CI, doctor may fail because Ollama/models/scripts are not present.
+    # The stable contract is that doctor runs, emits structured logs, and
+    # reports failure via command.error when checks fail.
+    assert '"message": "command.start"' in result.stdout
+    assert '"command": "doctor"' in result.stdout
+
+    if result.returncode == 0:
+        assert '"message": "doctor.summary"' in result.stdout
+    else:
+        assert '"message": "command.error"' in result.stdout
+        assert "doctor found" in result.stderr
 
 
-def test_doctor_accepts_test_data_dir_flag():
+def test_doctor_accepts_test_data_dir_flag() -> None:
     result = run_cli("--data-dir", "test_data", "doctor")
 
-    assert "checks run:" in result.stdout
-    assert "failures:" in result.stdout
+    # test_data doctor is expected to run against alternate data roots.
+    # It may still fail depending on environment/runtime assumptions.
+    assert '"message": "command.start"' in result.stdout
+    assert '"command": "doctor"' in result.stdout
 
-
-def test_doctor_failure_is_reported_cleanly():
-    result = run_cli("doctor")
-
-    if result.returncode != 0:
-        assert "[!] error:" in result.stderr
+    if result.returncode == 0:
+        assert '"message": "doctor.summary"' in result.stdout
+    else:
+        assert '"message": "command.error"' in result.stdout
+        assert "doctor found" in result.stderr
