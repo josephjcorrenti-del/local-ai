@@ -1,23 +1,22 @@
 from __future__ import annotations
 
 """
-ollama_workbench/output.py
+ollama_workbench/paths.py
 
-Human-facing CLI output helpers.
+Filesystem path resolution for the application.
 
 Responsibilities:
-- Terminal presentation (color, symbols, formatting)
-- Small, explicit helpers for success/failure/warning messages
+- Derive all runtime and repo paths from a small set of roots
+- Keep path construction centralized and consistent
+- Provide a single immutable AppPaths object via paths_get()
 
-Non-responsibilities:
-- No structured logging; use log.py
-- No business logic
-- No hidden behavior
-
-Design rule:
-- Anything printed for humans belongs here or in command-specific CLI output.
-- Anything structured for machines belongs in log.py.
-"""
+Design notes:
+- Repo paths (repo_root, src_root, scripts_dir) are derived from the code location
+- Runtime data paths are derived from CONFIG.ai_root and CONFIG.data_root
+- App data is kept outside the repo under:
+  ~/ai/data/<app_name>/
+- No global state: paths are recomputed on each call to paths_get()
+- Callers are responsible for creating directories when needed
 
 from dataclasses import dataclass
 from pathlib import Path
