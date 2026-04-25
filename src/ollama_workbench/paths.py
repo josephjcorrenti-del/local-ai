@@ -17,6 +17,7 @@ Design notes:
   ~/ai/data/<app_name>/
 - No global state: paths are recomputed on each call to paths_get()
 - Callers are responsible for creating directories when needed
+"""
 
 from dataclasses import dataclass
 from pathlib import Path
