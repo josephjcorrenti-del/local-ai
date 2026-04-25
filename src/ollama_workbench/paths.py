@@ -7,16 +7,16 @@ Human-facing CLI output helpers.
 
 Responsibilities:
 - Terminal presentation (color, symbols, formatting)
-- Small, explicit helpers for success/failure messaging
+- Small, explicit helpers for success/failure/warning messages
 
 Non-responsibilities:
-- NO structured logging (see log.py)
-- NO business logic
-- NO hidden behavior
+- No structured logging; use log.py
+- No business logic
+- No hidden behavior
 
 Design rule:
-- Anything printed for humans goes here.
-- Anything structured for machines goes to log.py.
+- Anything printed for humans belongs here or in command-specific CLI output.
+- Anything structured for machines belongs in log.py.
 """
 
 from dataclasses import dataclass

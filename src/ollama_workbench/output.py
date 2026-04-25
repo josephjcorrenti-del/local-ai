@@ -3,10 +3,20 @@ from __future__ import annotations
 """
 ollama_workbench/output.py
 
-Small helpers for human-facing CLI output.
+Human-facing CLI output helpers.
 
-This module owns terminal presentation details such as color and status markers.
-Structured logging stays in log.py.
+Responsibilities:
+- Terminal presentation (color, symbols, formatting)
+- Small, explicit helpers for success/failure/warning messages
+
+Non-responsibilities:
+- No structured logging; use log.py
+- No business logic
+- No hidden behavior
+
+Design rule:
+- Anything printed for humans belongs here or in command-specific CLI output.
+- Anything structured for machines belongs in log.py.
 """
 
 import sys
