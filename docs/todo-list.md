@@ -287,6 +287,14 @@ v10 phase 3 - command result shape
 
 v10 phase 4 - output code readability
 [ ] standardize comments/docstrings around log.py, output.py, and CLI output boundaries
+[ ] route existing success/failure CLI markers through output.py helpers
+
+v10 phase 5 - CLI output consistency review
+[ ] classify commands as action, report, content, or artifact commands
+[ ] standardize action result wording across commands
+[ ] standardize section, key/value, and list formatting rules
+[ ] standardize error, warning, dry-run, and no-op messages
+[ ] decide whether stats remains JSON-only or later gains human/json output modes
 
 v11 - gui exploration
 

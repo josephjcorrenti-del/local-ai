@@ -31,4 +31,4 @@ def test_migrate_missing_session_fails_cleanly():
     )
 
     assert result.returncode != 0
-    assert "[!] error:" in result.stderr
+    assert "error:" in result.stderr

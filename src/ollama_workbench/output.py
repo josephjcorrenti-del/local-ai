@@ -36,8 +36,14 @@ def color_yellow(text: str) -> str:
 def ok(message: str) -> None:
     print(f"{color_green('[✓]')} {message}")
 
+
 def fail(message: str) -> None:
-    print(f"{color_red('[✗]')} {message}")
+    print(f"{color_red('[✗]')} {message}", file=sys.stderr)
+
 
 def warn(message: str) -> None:
     print(f"{color_yellow('[!]')} {message}")
+
+
+def info(message: str) -> None:
+    print(f"[*] {message}")

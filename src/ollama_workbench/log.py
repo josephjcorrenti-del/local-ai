@@ -7,8 +7,10 @@ Minimal structured logging helper.
 
 Responsibilities:
 - Emit one JSON object per line (NDJSON)
-- Keep logs stdout-first and immediately inspectable
+- Always write structured events to run.log
+- Emit structured events to stdout only when OWB_VERBOSE=1
 - Provide a stable, flat event shape for traceability
+- Do not use this module for human-facing CLI output
 
 Design constraints:
 - No hidden configuration or environment-driven behavior

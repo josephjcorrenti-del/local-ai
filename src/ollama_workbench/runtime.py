@@ -36,6 +36,7 @@ from typing import Any
 
 from ollama_workbench.config import CONFIG
 from ollama_workbench.log import log_event
+from ollama_workbench.output import info, ok
 from ollama_workbench.paths import paths_get
 
 
@@ -327,7 +328,7 @@ def ollama_ensure_running() -> None:
         return
 
     log_event("ollama.ensure_running.start")
-    print("[*] Ollama not healthy. Starting AI stack...")
+    info("Ollama not healthy. Starting AI stack...")
     ai_stack_start()
 
     for _ in range(20):
@@ -337,7 +338,7 @@ def ollama_ensure_running() -> None:
                 event_outcome="success",
                 elapsed_ms=_elapsed_ms_get(started_at),
             )
-            print("[✓] Ollama is healthy")
+            ok("Ollama is healthy")
             return
         time.sleep(1)
 

@@ -15,9 +15,10 @@ Responsibilities:
 Design notes:
 - CLI is intentionally "flat": each command maps to one handler
 - Business logic lives in other modules (runtime, memory, web)
-- Output is a mix of:
-  - human-readable CLI output (print)
-  - machine-readable logs (log_event)
+- Output is intentionally separated:
+  - Human-readable command output uses print() or output.py helpers
+  - Machine-readable structured logs use log_event()
+  - --verbose controls whether structured logs are also shown in terminal
 - No background behavior: all actions are explicit per command
 """
 
@@ -42,7 +43,7 @@ from ollama_workbench.memory import (
     session_turns_get,
     sessions_stats_get,
 )
-from ollama_workbench.output import fail, ok
+from ollama_workbench.output import fail, info, ok, warn
 from ollama_workbench.paths import paths_get
 from ollama_workbench.runtime import (
     ai_status_show,
@@ -173,7 +174,7 @@ def tool_run(path: str) -> None:
                 }
             ]
         else:
-            print("[!] Model did not call a tool")
+            warn("Model did not call a tool")
             print(content)
             return
 
@@ -181,12 +182,12 @@ def tool_run(path: str) -> None:
         fn = tool_call["function"]["name"]
         args = tool_call["function"]["arguments"]
 
-        print(f"[*] Executing tool: {fn}({args})")
+        info(f"Executing tool: {fn}({args})")
 
         tool_fn = TOOL_REGISTRY[fn]
         tool_result = tool_fn(**args)
 
-        print("[*] Tool result:")
+        info("Tool result:")
         print(json.dumps(tool_result, indent=2))
 
         messages.append(
@@ -216,7 +217,8 @@ def tool_run(path: str) -> None:
         }
     )
 
-    print("\n[*] Final answer:")
+    print()
+    info("Final answer:")
     print(final["message"]["content"])
 
 
@@ -256,7 +258,7 @@ def chat_run(user_prompt: str, session_name: str | None = None) -> None:
 def clear_run(session_name: str | None = None) -> None:
     """Clear stored messages for a session."""
     session_clear(session_name)
-    print("[✓] Session cleared")
+    ok("Session cleared")
 
 
 def prompt_command_run(args: argparse.Namespace) -> None:
@@ -302,12 +304,12 @@ def summarize_command_run(args: argparse.Namespace) -> None:
     if args.all:
         for name in session_names_get():
             session_summarize(name)
-            print(f"[✓] Session summarized ({name})")
+            ok(f"Session summarized ({name})")
         return
 
     session_name = args.session or CONFIG.default_session_name
     session_summarize(session_name)
-    print(f"[✓] Session summarized ({session_name})")
+    ok(f"Session summarized ({session_name})")
 
 
 def status_command_run(args: argparse.Namespace) -> None:
@@ -583,18 +585,18 @@ def migrate_command_run(args: argparse.Namespace) -> None:
         for name in names:
             result = session_migrate(name, dry_run=args.dry_run)
             if args.dry_run:
-                print(f"[✓] Would migrate ({name}) changed={result['changed']}")
+                info(f"Would migrate ({name}) changed={result['changed']}")
             else:
-                print(f"[✓] Session migrated ({name}) changed={result['changed']}")
+                ok(f"Session migrated ({name}) changed={result['changed']}")
         return
 
     session_name = args.session or CONFIG.default_session_name
     result = session_migrate(session_name, dry_run=args.dry_run)
 
     if args.dry_run:
-        print(f"[✓] Would migrate ({session_name}) changed={result['changed']}")
+        info(f"Would migrate ({session_name}) changed={result['changed']}")
     else:
-        print(f"[✓] Session migrated ({session_name}) changed={result['changed']}")
+        ok(f"Session migrated ({session_name}) changed={result['changed']}")
 
 
 def repair_command_run(args: argparse.Namespace) -> None:
@@ -606,25 +608,25 @@ def repair_command_run(args: argparse.Namespace) -> None:
 
     if args.dry_run:
         if result["action"] == "reset_from_malformed":
-            print(
-                f"[✓] Would repair ({args.session}) by backing up malformed file "
+            info(
+                f"Would repair ({args.session}) by backing up malformed file "
                 f"to {result['backup_path']} and resetting the session"
             )
         else:
-            print(
-                f"[✓] Would repair ({args.session}) by normalizing valid JSON "
+            info(
+                f"Would repair ({args.session}) by normalizing valid JSON "
                 f"changed={result['changed']}"
             )
         return
 
     if result["action"] == "reset_from_malformed":
-        print(
-            f"[✓] Session repaired ({args.session}); malformed file backed up to "
+        ok(
+            f"Session repaired ({args.session}); malformed file backed up to "
             f"{result['backup_path']} and session reset"
         )
     else:
-        print(
-            f"[✓] Session repaired ({args.session}); normalized valid JSON "
+        ok(
+            f"Session repaired ({args.session}); normalized valid JSON "
             f"changed={result['changed']}"
         )
 
@@ -818,7 +820,7 @@ def main() -> None:
             import traceback
             traceback.print_exc()
         else:
-            print(f"[!] error: {exc}", file=sys.stderr)
+            fail(f"error: {exc}")
 
         sys.exit(1)
 
