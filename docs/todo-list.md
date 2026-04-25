@@ -267,10 +267,26 @@ v9 phase 2 - containers
 [ ] containerize ollama_workbench
 [ ] make helper script handling container-friendly
 
-v10 - richer CLI output
+v10 - output modes and CLI readability
 
-v10 phase 1 - output refinement
-[ ] richer cli output
+v10 phase 1 - output boundary
+[x] separate user-facing command output from structured log output
+[x] keep NDJSON run.log always written for ELK/Filebeat
+[x] add --verbose to show structured log events in terminal
+[x] keep --debug focused on traceback/developer error detail
+[x] create small output helper for human-facing CLI output
+[x] move doctor color/checkmark helpers out of cli.py
+
+v10 phase 2 - status command cleanup
+[~] make status the pilot command for clean one-shot CLI output
+[x] keep status readable without embedded NDJSON noise
+[x] preserve detailed inspection through run.log / --verbose
+
+v10 phase 3 - command result shape
+[ ] identify a simple internal result/output shape that can later support Browser UI, One-shot CLI, and Workbench shell
+
+v10 phase 4 - output code readability
+[ ] standardize comments/docstrings around log.py, output.py, and CLI output boundaries
 
 v11 - gui exploration
 
@@ -321,3 +337,10 @@ File system
 Other 
 [ ] decide whether formats besides utf-8 should be allowed.
 [ ] decide whether pipx install is needed for operator workflow
+[ ] add chat config
+[ ] parser argumens in chat
+[ ] optionally turn logs off in cli
+[ ] cat like SQL*Plus or Python3
+[ ] website
+[ ] ollama_workbench shell 
+[ ] clean up CLI
