@@ -278,7 +278,7 @@ v10 phase 1 - output boundary
 [x] move doctor color/checkmark helpers out of cli.py
 
 v10 phase 2 - status command cleanup
-[~] make status the pilot command for clean one-shot CLI output
+[x] make status the pilot command for clean one-shot CLI output
 [x] keep status readable without embedded NDJSON noise
 [x] preserve detailed inspection through run.log / --verbose
 
@@ -286,11 +286,13 @@ v10 phase 3 - command result shape
 [ ] identify a simple internal result/output shape that can later support Browser UI, One-shot CLI, and Workbench shell
 
 v10 phase 4 - output code readability
-[ ] standardize comments/docstrings around log.py, output.py, and CLI output boundaries
-[ ] route existing success/failure CLI markers through output.py helpers
+[x] standardize comments/docstrings around log.py, output.py, and CLI output boundaries
+[x] route existing success/failure CLI markers through output.py helpers
+[x] standardize info/warning/failure helpers across CLI output
+[x] enforce stderr for failure paths via fail()
 
 v10 phase 5 - CLI output consistency review
-[ ] classify commands as action, report, content, or artifact commands
+[x] classify commands as action, report, content, or artifact commands
 [ ] standardize action result wording across commands
 [ ] standardize section, key/value, and list formatting rules
 [ ] standardize error, warning, dry-run, and no-op messages
@@ -352,3 +354,4 @@ Other
 [ ] website
 [ ] ollama_workbench shell 
 [ ] clean up CLI
+[ ] malform json in should be a warning in docs.

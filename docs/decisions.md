@@ -86,3 +86,103 @@
   - `event.dataset = ollama-workbench.runlog`
 - Prefer simple field mirroring and explicit mappings over introducing a fuller logging framework.
 - Do not break or redesign existing OpenVPN or python-lab ingestion to add `ollama_workbench`.
+
+## CLI output model
+
+The CLI distinguishes between different categories of commands. This ensures
+consistent output behavior and allows future reuse across CLI, web UI, and
+other interfaces.
+
+### Command categories
+
+Commands should fall into one of the following categories:
+
+- action:
+  - Performs an explicit, state-changing or operator-invoked task
+  - Examples: clear, summarize, migrate, repair, web-cleanup --delete
+  - Output:
+    - Uses output helpers (ok / fail / info / warn)
+    - Ends with a clear result message
+
+- report:
+  - Displays current system or data state
+  - Examples: status, sessions, stats, web-cleanup (dry run)
+  - Output:
+    - Plain, structured, and scannable
+    - Avoids output helpers unless highlighting exceptional conditions
+
+- content:
+  - Returns model-generated or user-facing content
+  - Examples: prompt, chat, json, tool, web-chat
+  - Output:
+    - Minimal framing
+    - Avoids extra markers or formatting that interfere with readability
+
+- artifact:
+  - Produces or lists inspectable files or fetched sources
+  - Examples: web-fetch, web-search
+  - Output:
+    - Consistent source/path formatting
+    - Clear association between content and artifact path
+
+### Output rules
+
+- stdout is reserved for usable command output.
+- stderr is reserved for failure conditions.
+- The `fail()` helper must always write to stderr.
+- The `ok()`, `info()`, and `warn()` helpers write to stdout.
+
+- Structured logs are:
+  - Always written to the run log file
+  - Only shown in terminal when `--verbose` is set
+
+- Commands must not mix structured logs into normal CLI output.
+
+### Design intent
+
+- Keep CLI output predictable and script-friendly
+- Preserve a clear separation between:
+  - human-readable output
+  - structured logs
+  - failure signaling
+
+- This model supports future expansion to:
+  - browser-based UI
+  - interactive workbench shell
+  - SQL-like querying interface
+
+### Formatting rules
+
+- Prefer plain, readable output over decorative formatting.
+- Use output helpers only when they clarify action status, progress, warning, or failure.
+- Do not force markers onto report/data/content output.
+- Use lowercase section headers ending with `:`.
+- Separate major sections with one blank line.
+- Use `key: value` for simple facts.
+- Use two-space indentation for nested key/value lines.
+- Use numbered blocks for source/artifact lists.
+- Keep raw model/content output minimally framed.
+- Keep JSON output valid and unwrapped when a command intentionally emits JSON.
+- Dry-run output should clearly say what would happen, not imply that work was performed.
+
+### Action message guidelines
+
+- Prefer starting action-related messages with:
+  "<Object> <action>"
+
+- This applies primarily to:
+  - ok() messages (successful actions)
+  - fail() messages (failed actions)
+
+- Additional detail may follow as needed, for example:
+  - "Session migrated (default) changed=True"
+  - "chat model lookup failed: qwen2.5-coder:3b"
+
+- Do not enforce this pattern strictly where it harms readability.
+
+- info() and warn() messages are intentionally flexible and may:
+  - describe progress ("Executing tool...")
+  - describe intent ("Would migrate...")
+  - explain conditions ("Model did not call a tool")
+
+- Clarity is preferred over strict formatting.

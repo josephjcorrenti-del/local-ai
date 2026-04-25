@@ -387,9 +387,9 @@ def doctor_command_run(args: argparse.Namespace) -> None:
             event_outcome="failure",
             error_message=str(exc),
             error_type=type(exc).__name__,
-            error=f"chat model missing ({CONFIG.chat_model_name})",
+            error=f"chat model lookup failed: {CONFIG.chat_model_name}",
         )
-        fail(f"chat model missing: {CONFIG.chat_model_name}")
+        fail(f"chat model lookup failed: {CONFIG.chat_model_name}")
         failures += 1
 
     # --- Sessions dir writable ---
@@ -455,7 +455,7 @@ def doctor_command_run(args: argparse.Namespace) -> None:
     )
 
     if failures:
-        fail(f"doctor found {failures} failing check(s)")
+        fail(f"doctor run failed: {failures} failing check(s)")
         raise RuntimeError(f"doctor found {failures} failing check(s)")
     else:
         ok(f"doctor passed ({checks_run} checks)")
