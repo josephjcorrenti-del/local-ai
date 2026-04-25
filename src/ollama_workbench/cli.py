@@ -564,11 +564,13 @@ def web_cleanup_command_run(args: argparse.Namespace) -> None:
     removed = web_cleanup(args.days, args.delete)
 
     if not removed:
-        print("No old web artifacts found.")
+        info("No old web artifacts found.")
         return
 
-    action = "Deleting" if args.delete else "Would delete"
-    print(f"{action} {len(removed)} artifact(s):")
+    if args.delete:
+        ok(f"Deleted {len(removed)} artifact(s):")
+    else:
+        info(f"Would delete {len(removed)} artifact(s):")
 
     for path in removed:
         print(f"  {path}")
@@ -579,7 +581,7 @@ def migrate_command_run(args: argparse.Namespace) -> None:
     if args.all:
         names = session_names_get()
         if not names:
-            print("No sessions found.")
+            info("No sessions found.")
             return
 
         for name in names:

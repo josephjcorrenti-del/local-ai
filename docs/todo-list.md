@@ -293,10 +293,10 @@ v10 phase 4 - output code readability
 
 v10 phase 5 - CLI output consistency review
 [x] classify commands as action, report, content, or artifact commands
-[ ] standardize action result wording across commands
+[x] standardize action result wording across commands
 [ ] standardize section, key/value, and list formatting rules
-[ ] standardize error, warning, dry-run, and no-op messages
-[ ] decide whether stats remains JSON-only or later gains human/json output modes
+[x] standardize error, warning, dry-run, and no-op messages
+[x] decide whether stats remains JSON-only or later gains human/json output modes
 
 v11 - gui exploration
 
