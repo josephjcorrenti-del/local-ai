@@ -9,7 +9,7 @@ run_owb() {
 }
 
 echo "=== doctor (normal data) ==="
-if run_owb doctor > /tmp/doctor_normal.out 2>&1; then
+if run_owb --verbose doctor > /tmp/doctor_normal.out 2>&1; then
   echo "[✓] normal doctor passed"
 else
   echo "[✗] normal doctor failed unexpectedly"
@@ -19,7 +19,7 @@ fi
 
 echo
 echo "=== doctor (test_data) ==="
-if run_owb --data-dir test_data doctor > /tmp/doctor_test.out 2>&1; then
+if run_owb --verbose --data-dir test_data doctor > /tmp/doctor_test.out 2>&1; then
   echo "[✗] test_data doctor unexpectedly passed"
   cat /tmp/doctor_test.out
   exit 1

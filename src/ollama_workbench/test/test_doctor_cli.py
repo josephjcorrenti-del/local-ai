@@ -23,7 +23,7 @@ def run_cli(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_doctor_runs_and_reports_summary() -> None:
-    result = run_cli("doctor")
+    result = run_cli("--verbose", "doctor")
 
     # In CI, doctor may fail because Ollama/models/scripts are not present.
     # The stable contract is that doctor runs, emits structured logs, and
@@ -39,7 +39,7 @@ def test_doctor_runs_and_reports_summary() -> None:
 
 
 def test_doctor_accepts_test_data_dir_flag() -> None:
-    result = run_cli("--data-dir", "test_data", "doctor")
+    result = run_cli("--verbose", "--data-dir", "test_data", "doctor")
 
     # test_data doctor is expected to run against alternate data roots.
     # It may still fail depending on environment/runtime assumptions.

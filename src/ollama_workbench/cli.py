@@ -42,6 +42,7 @@ from ollama_workbench.memory import (
     session_turns_get,
     sessions_stats_get,
 )
+from ollama_workbench.output import fail, ok
 from ollama_workbench.paths import paths_get
 from ollama_workbench.runtime import (
     ai_status_show,
@@ -335,29 +336,6 @@ def status_command_run(args: argparse.Namespace) -> None:
     ai_status_show()
 
 
-USE_COLOR = sys.stdout.isatty()
-
-
-def _green(text: str) -> str:
-    if not USE_COLOR:
-        return text
-    return f"\033[32m{text}\033[0m"
-
-
-def _red(text: str) -> str:
-    if not USE_COLOR:
-        return text
-    return f"\033[31m{text}\033[0m"
-
-
-def _doctor_ok(message: str) -> None:
-    print(f"{_green('[✓]')} {message}")
-
-
-def _doctor_fail(message: str) -> None:
-    print(f"{_red('[✗]')} {message}")
-
-
 def doctor_command_run(args: argparse.Namespace) -> None:
     del args
 
@@ -365,12 +343,14 @@ def doctor_command_run(args: argparse.Namespace) -> None:
     failures = 0
     checks_run = 0
 
+    # --- Ollama health ---
     if ollama_is_healthy():
         log_event(
             "doctor.check.ok",
             command="doctor",
             event_outcome="success",
         )
+        ok("ollama reachable")
         checks_run += 1
     else:
         log_event(
@@ -382,8 +362,10 @@ def doctor_command_run(args: argparse.Namespace) -> None:
             error_type="RuntimeCheckError",
             error="ollama not reachable",
         )
+        fail("ollama not reachable")
         failures += 1
 
+    # --- Model availability ---
     try:
         ollama_model_ensure_available(CONFIG.chat_model_name)
         log_event(
@@ -392,6 +374,7 @@ def doctor_command_run(args: argparse.Namespace) -> None:
             model=CONFIG.chat_model_name,
             event_outcome="success",
         )
+        ok(f"chat model available: {CONFIG.chat_model_name}")
         checks_run += 1
     except RuntimeError as exc:
         log_event(
@@ -404,19 +387,23 @@ def doctor_command_run(args: argparse.Namespace) -> None:
             error_type=type(exc).__name__,
             error=f"chat model missing ({CONFIG.chat_model_name})",
         )
+        fail(f"chat model missing: {CONFIG.chat_model_name}")
         failures += 1
 
+    # --- Sessions dir writable ---
     try:
         paths.sessions_dir.mkdir(parents=True, exist_ok=True)
         test_path = paths.sessions_dir / ".doctor_write_test"
         test_path.write_text("ok\n", encoding="utf-8")
         test_path.unlink()
+
         log_event(
             "doctor.check.ok",
             command="doctor",
             path=str(paths.sessions_dir),
             event_outcome="success",
         )
+        ok(f"sessions dir writable: {paths.sessions_dir}")
         checks_run += 1
     except OSError as exc:
         log_event(
@@ -429,8 +416,10 @@ def doctor_command_run(args: argparse.Namespace) -> None:
             error_type=type(exc).__name__,
             error=str(exc),
         )
+        fail(f"sessions dir not writable: {paths.sessions_dir}")
         failures += 1
 
+    # --- Session validity ---
     for session_name in session_names_get():
         checks_run += 1
         try:
@@ -441,6 +430,7 @@ def doctor_command_run(args: argparse.Namespace) -> None:
                 session=session_name,
                 event_outcome="success",
             )
+            ok(f"session valid: {session_name}")
         except RuntimeError as exc:
             log_event(
                 "doctor.check.fail",
@@ -452,8 +442,10 @@ def doctor_command_run(args: argparse.Namespace) -> None:
                 error_type=type(exc).__name__,
                 error=str(exc),
             )
+            fail(f"session invalid: {session_name}")
             failures += 1
 
+    # --- Summary ---
     log_event(
         "doctor.summary",
         command="doctor",
@@ -461,7 +453,10 @@ def doctor_command_run(args: argparse.Namespace) -> None:
     )
 
     if failures:
+        fail(f"doctor found {failures} failing check(s)")
         raise RuntimeError(f"doctor found {failures} failing check(s)")
+    else:
+        ok(f"doctor passed ({checks_run} checks)")
 
 
 def web_fetch_command_run(args: argparse.Namespace) -> None:
@@ -663,6 +658,11 @@ def parser_build() -> argparse.ArgumentParser:
         help="Show full traceback on errors",
     )
     parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show structured log events in terminal",
+    )
+    parser.add_argument(
         "--data-dir",
         default="data",
         help="AI data directory under ~/ai (default: data)",
@@ -783,6 +783,9 @@ def main() -> None:
     args = parser.parse_args()
 
     os.environ["OWB_DATA_DIR"] = args.data_dir
+
+    if args.verbose:
+        os.environ["OWB_VERBOSE"] = "1"
 
     command = args.command
     handler = COMMAND_HANDLERS.get(command)

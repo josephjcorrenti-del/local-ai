@@ -20,6 +20,7 @@ Design constraints:
 from datetime import UTC, datetime
 import inspect
 import json
+import os
 import time
 import uuid
 from pathlib import Path
@@ -128,7 +129,8 @@ def log_event(
 
     line = json.dumps(payload, ensure_ascii=False)
 
-    print(line)
+    if os.environ.get("OWB_VERBOSE") == "1":
+        print(line)
 
     paths = paths_get()
     paths.logs_dir.mkdir(parents=True, exist_ok=True)
