@@ -34,7 +34,7 @@ def test_summarize_skips_when_session_is_empty():
     assert "reason=empty" in result.stdout
 
 
-def test_summarize_skips_when_no_older_messages():
+def test_summarize_skips_without_false_summarized_message():
     result = run_cli(
         "--data-dir", "test_data",
         "summarize",
@@ -43,4 +43,4 @@ def test_summarize_skips_when_no_older_messages():
 
     assert result.returncode == 0
     assert "Session skipped" in result.stdout
-    assert "reason=no_older_messages" in result.stdout
+    assert "Session summarized" not in result.stdout
