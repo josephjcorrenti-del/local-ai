@@ -308,13 +308,20 @@ def summarize_command_run(args: argparse.Namespace) -> None:
     """Run explicit session summarization for one session or all sessions."""
     if args.all:
         for name in session_names_get():
-            session_summarize(name)
-            ok(f"Session summarized ({name})")
+            result = session_summarize(name)
+            if result["changed"]:
+                ok(f"Session summarized ({name})")
+            else:
+                info(f"Session skipped ({name}) reason={result['reason']}")
         return
 
     session_name = args.session or CONFIG.default_session_name
-    session_summarize(session_name)
-    ok(f"Session summarized ({session_name})")
+    result = session_summarize(session_name)
+
+    if result["changed"]:
+        ok(f"Session summarized ({session_name})")
+    else:
+        info(f"Session skipped ({session_name}) reason={result['reason']}")
 
 
 def status_command_run(args: argparse.Namespace) -> None:

@@ -500,7 +500,7 @@ def _messages_last_timestamp_get(messages: list[dict[str, Any]]) -> str | None:
 # NOTE:
 # This function performs summarization only when explicitly called.
 # Threshold values bound the work performed, but do not trigger automatic runs.
-def session_summarize(session_name: str) -> None:
+def session_summarize(session_name: str) -> dict[str, object]:
     """Summarize older session messages and persist the result."""
     log_event(
         "session.summarize.start",
@@ -515,7 +515,10 @@ def session_summarize(session_name: str) -> None:
             "session.summarize.skip_empty",
             session=session_name,
         )
-        return
+        return {
+            "changed": False,
+            "reason": "empty",
+        }
 
     keep_n = CONFIG.summary_keep_recent_messages
     recent_messages = messages[-keep_n:]
@@ -528,7 +531,10 @@ def session_summarize(session_name: str) -> None:
             "session.summarize.skip_no_older_messages",
             session=session_name,
         )
-        return
+        return {
+            "changed": False,
+            "reason": "no_older_messages",
+        }
 
     lines: list[str] = []
     for m in older_messages:
@@ -552,6 +558,10 @@ def session_summarize(session_name: str) -> None:
             prompt,
             model_name=CONFIG.summary_model_name,
         )
+        return {
+            "changed": True,
+            "reason": "summarized",
+        }
     except RuntimeError as exc:
         log_event(
             "session.summarize.error",

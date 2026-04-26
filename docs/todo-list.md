@@ -315,12 +315,12 @@ Debug
 [x] add tests for normal vs --debug error behavior
 
 CLI cleanup
-[ ] make summarize output distinguish "summarized" vs "no summary needed"
-[ ] review summarize/user-facing CLI messages so skipped work is reported accurately
-[ ] malformed json should be a warning in docs.
+[✔] make summarize output distinguish "summarized" vs "no summary needed"
+[✔] review summarize/user-facing CLI messages so skipped work is reported accurately
+[~] malformed json should be a warning in docs  
 
 Web.py
-[ ] add content truncation / windowing per source
+[x] add content truncation / windowing per source
 
 v13 important 2
 
