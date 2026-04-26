@@ -54,8 +54,13 @@ from ollama_workbench.runtime import (
 )
 from ollama_workbench.schemas import PING_SCHEMA
 from ollama_workbench.tools import TOOL_DEFS, TOOL_REGISTRY
-from ollama_workbench.web import web_artifact_load, web_cleanup, web_fetch, web_search
-
+from ollama_workbench.web import (
+    web_artifact_content_window_get,
+    web_artifact_load,
+    web_cleanup,
+    web_fetch,
+    web_search,
+)
 
 def prompt_run(user_prompt: str) -> None:
     """Run a one-off prompt against the local model."""
@@ -506,17 +511,23 @@ def web_chat_command_run(args: argparse.Namespace) -> None:
     else:
         raise RuntimeError("web-chat requires either --url or --query")
 
-    combined_parts: list[str] = []
-    for i, artifact in enumerate(artifacts, 1):
-        content_text = artifact.get("content_text", "")
-        bounded_content = content_text[: CONFIG.web_chat_max_source_chars]
+    source_windows = []
+    for artifact in artifacts:
+        content_window = web_artifact_content_window_get(
+            artifact,
+            CONFIG.web_chat_max_source_chars,
+        )
+        source_windows.append((artifact, content_window))
 
+    combined_parts: list[str] = []
+    for i, (artifact, content_window) in enumerate(source_windows, 1):
         combined_parts.append(
             f"[Source {i}]\n"
             f"URL: {artifact['url']}\n"
             f"Title: {artifact.get('title') or '(none)'}\n"
-            f"Included chars: {len(bounded_content)} of {len(content_text)}\n\n"
-            f"Page content:\n{bounded_content}"
+            f"Included chars: {content_window['included_chars']} "
+            f"of {content_window['total_chars']}\n\n"
+            f"Page content:\n{content_window['content_text']}"
         )
 
     prompt = (
@@ -554,14 +565,14 @@ def web_chat_command_run(args: argparse.Namespace) -> None:
         print(f"mode: query-search ({len(artifacts)} source(s))")
     print()
 
-    for i, artifact in enumerate(artifacts, 1):
-        content_text = artifact.get("content_text", "")
-        included_chars = min(len(content_text), CONFIG.web_chat_max_source_chars)
-
+    for i, (artifact, content_window) in enumerate(source_windows, 1):
         print(f"[{i}]")
         print(f"url: {artifact['url']}")
         print(f"artifact_path: {artifact['artifact_path']}")
-        print(f"included_chars: {included_chars} of {len(content_text)}")
+        print(
+            f"included_chars: {content_window['included_chars']} "
+            f"of {content_window['total_chars']}"
+        )
         print()
 
     print(answer)

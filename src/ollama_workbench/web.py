@@ -262,6 +262,22 @@ def web_artifact_load(path: str) -> dict[str, Any]:
         return json.load(fh)
 
 
+def web_artifact_content_window_get(
+    artifact: dict[str, Any],
+    max_chars: int,
+) -> dict[str, Any]:
+    """Return bounded source content metadata for prompt construction."""
+    content_text = artifact.get("content_text", "")
+    bounded_content = content_text[:max_chars]
+
+    return {
+        "content_text": bounded_content,
+        "included_chars": len(bounded_content),
+        "total_chars": len(content_text),
+        "truncated": len(content_text) > len(bounded_content),
+    }
+
+
 def web_cleanup(days: int, delete: bool) -> list[Path]:
     """Find or remove web artifacts older than the given age."""
     paths = paths_get()

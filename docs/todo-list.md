@@ -312,7 +312,7 @@ v11 phase 2 - interface exploration
 v12 quick wins 2
 
 Debug
-[ ] add tests for normal vs --debug error behavior
+[x] add tests for normal vs --debug error behavior
 
 CLI cleanup
 [ ] make summarize output distinguish "summarized" vs "no summary needed"
