@@ -508,11 +508,15 @@ def web_chat_command_run(args: argparse.Namespace) -> None:
 
     combined_parts: list[str] = []
     for i, artifact in enumerate(artifacts, 1):
+        content_text = artifact.get("content_text", "")
+        bounded_content = content_text[: CONFIG.web_chat_max_source_chars]
+
         combined_parts.append(
             f"[Source {i}]\n"
             f"URL: {artifact['url']}\n"
-            f"Title: {artifact.get('title') or '(none)'}\n\n"
-            f"Page content:\n{artifact.get('content_text', '')}"
+            f"Title: {artifact.get('title') or '(none)'}\n"
+            f"Included chars: {len(bounded_content)} of {len(content_text)}\n\n"
+            f"Page content:\n{bounded_content}"
         )
 
     prompt = (
@@ -551,9 +555,13 @@ def web_chat_command_run(args: argparse.Namespace) -> None:
     print()
 
     for i, artifact in enumerate(artifacts, 1):
+        content_text = artifact.get("content_text", "")
+        included_chars = min(len(content_text), CONFIG.web_chat_max_source_chars)
+
         print(f"[{i}]")
         print(f"url: {artifact['url']}")
         print(f"artifact_path: {artifact['artifact_path']}")
+        print(f"included_chars: {included_chars} of {len(content_text)}")
         print()
 
     print(answer)

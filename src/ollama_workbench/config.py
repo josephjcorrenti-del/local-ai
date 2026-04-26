@@ -52,6 +52,9 @@ class AppConfig:
     summary_inactive_minutes: int = 30
     summary_max_input_chars: int = 600
 
+    # Web prompt policy
+    web_chat_max_source_chars: int = 6000
+
     @property
     def data_root(self) -> Path:
         """Resolve the active data root from an explicit CLI/env selection."""

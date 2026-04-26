@@ -194,10 +194,10 @@ phase 2a
 [x] add web-search by query
 
 phase 2b - multi-source web-chat
-[ ] extend web-chat to accept --query as an alternative to --url
-[ ] run web-search when --query is used
-[ ] combine fetched artifacts into one bounded prompt
-[ ] print which sources/artifacts were used
+[x] extend web-chat to accept --query as an alternative to --url
+[x] run web-search when --query is used
+[x] combine fetched artifacts into one bounded prompt
+[x] print which sources/artifacts were used
 
 v8 - observability / ELK
 
@@ -294,7 +294,7 @@ v10 phase 4 - output code readability
 v10 phase 5 - CLI output consistency review
 [x] classify commands as action, report, content, or artifact commands
 [x] standardize action result wording across commands
-[ ] standardize section, key/value, and list formatting rules
+[x] standardize section, key/value, and list formatting rules
 [x] standardize error, warning, dry-run, and no-op messages
 [x] decide whether stats remains JSON-only or later gains human/json output modes
 
@@ -309,49 +309,75 @@ v11 phase 2 - interface exploration
 [ ] gui exploration
 [ ] web ui only if still wanted
 
-to be prioritized (tbp)
+v12 quick wins 2
+
+Debug
+[ ] add tests for normal vs --debug error behavior
+
+CLI cleanup
+[ ] make summarize output distinguish "summarized" vs "no summary needed"
+[ ] review summarize/user-facing CLI messages so skipped work is reported accurately
+[ ] malformed json should be a warning in docs.
+
+Web.py
+[ ] add content truncation / windowing per source
+
+v13 important 2
 
 Doctor
 [ ] create and move doctor logic in cli.py to doctor.py
 [ ] refactor cli.doctor_command_run
-[ ] revisit doctor output grouping only if it improves readability
-[ ] revisit doctor check taxonomy only if ELK/log review justifies it
 
 Debug
-[ ] decide whether --debug should affect argparse parse errors
-[ ] decide whether --debug should surface contained/structured errors differently
 [ ] decide whether debug mode should log exception type separately from error text
-[ ] decide whether a later --verbose flag is needed distinct from --debug
-[ ] add tests for normal vs --debug error behavior
+[ ] decide whether --debug should surface contained/structured errors differently
 
 CLI cleanup
-[ ] refactor repeated doctor writable-check pattern only if it improves readability without hiding behavior
-[ ] make summarize output distinguish "summarized" vs "no summary needed"
 [ ] decide whether summarize --all should continue on per-session failure or fail fast
-[ ] decide whether summary_inactive_minutes should remain reserved or be removed until used
 [ ] review duplicate Ollama health/model calls only if logs become noisy
-[ ] tighten session naming around "load ok" vs deeper validation if needed later
-[ ] create and move doctor logic in cli.py to doctor.py
 [ ] keep cli.py focused on orchestration only as complexity justifies
-[ ] review summarize/user-facing CLI messages so skipped work is reported accurately
 [ ] standardize command handler/docstring shape where helpful
 
 Web.py
 [ ] add search engine(s) to config
 [ ] --query is slow
-[ ] add content truncation / windowing per source       
+
+
+v13 misc tasks
+
+Doctor
+[ ] revisit doctor output grouping only if it improves readability
+[ ] revisit doctor check taxonomy only if ELK/log review justifies it
+
+Debug
+[ ] decide whether --debug should affect argparse parse errors
+
+CLI cleanup
+[ ] refactor repeated doctor writable-check pattern only if it improves readability without hiding behavior
+[ ] decide whether summary_inactive_minutes should remain reserved or be removed until used
+[ ] tighten session naming around "load ok" vs deeper validation if needed later
+[ ] clean up CLI
+
+Other
+[ ] decide whether formats besides utf-8 should be allowed.
+[ ] decide whether pipx install is needed for operator workflow
+[ ] add chat config
+[ ] parser arguments in chat
+[ ] optionally turn logs off in cli
+
+v14 prep for outside interfaces
 
 File system
 [ ] read file system with explicit approval
 
-Other 
-[ ] decide whether formats besides utf-8 should be allowed.
-[ ] decide whether pipx install is needed for operator workflow
-[ ] add chat config
-[ ] parser argumens in chat
-[ ] optionally turn logs off in cli
-[ ] cat like SQL*Plus or Python3
+v15 outside interfaces
+
+Other
 [ ] website
-[ ] ollama_workbench shell 
-[ ] clean up CLI
-[ ] malform json in should be a warning in docs.
+[ ] ollama_workbench shell
+
+Interface boundary
+[ ] revisit command result shape only when a second interface such as UI, shell, or integration is introduced
+[ ] prefer deriving result shape from real command behavior, not designing upfront
+
+to be prioritized (tbp)
