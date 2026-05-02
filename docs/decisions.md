@@ -186,3 +186,82 @@ Commands should fall into one of the following categories:
   - explain conditions ("Model did not call a tool")
 
 - Clarity is preferred over strict formatting.
+
+### Search provider direction
+
+- Current web search uses DuckDuckGo as the only implemented provider.
+- Do not add search-engine configuration while there is only one provider.
+- The preferred long-term direction is a locally hosted search service/API that `ollama_workbench` can call explicitly.
+- A provider abstraction should be introduced only after a second provider exists, preferably the local search provider.
+
+### Summarize behavior
+
+- `summarize --session` operates on a single session and reports:
+  - summarized
+  - skipped with reason
+
+- `summarize --all` is currently fail-fast:
+  - a single malformed or failing session stops execution
+  - this is intentional for manual/operator use
+
+- A future automated/batch mode may:
+  - log per-session failures
+  - continue processing remaining sessions
+  - provide a final summary
+
+### Debug mode behavior
+
+- Default mode:
+  - shows concise user-facing error messages
+  - does not include traceback or exception type
+
+- `--debug` mode:
+  - shows full Python traceback
+  - preserves full exception context
+
+- Structured error details:
+  - remain in NDJSON logs
+  - are not surfaced in CLI output
+
+- Do not introduce additional error formatting unless a second interface requires it.
+
+### Web-chat prompt policy
+
+- Web-chat uses bounded content per source to control prompt size.
+- The limit is defined by:
+  - `CONFIG.web_chat_max_source_chars`
+
+- Bounding is:
+  - explicit
+  - deterministic
+  - applied before model invocation
+
+- This is a safety and performance boundary, not a quality optimization.
+- Future improvements may replace simple truncation with question-aware selection.
+
+### Web search performance
+
+- Web search latency is primarily due to:
+  - sequential network fetch of multiple sources
+
+- Current behavior:
+  - fetches results sequentially
+  - prioritizes simplicity and inspectability over speed
+
+- Optimization is deferred until needed.
+- Likely future direction:
+  - parallel fetch of sources
+
+### Web artifact handling
+
+- Fetched web content is stored as raw, inspectable artifacts.
+- Artifacts must remain unchanged after fetch.
+
+- Any transformation for model input (e.g. truncation, chunking):
+  - occurs at read/use time
+  - must not modify stored artifacts
+
+- This preserves:
+  - reproducibility
+  - inspectability
+  - debuggability

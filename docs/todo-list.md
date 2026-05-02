@@ -315,35 +315,53 @@ Debug
 [x] add tests for normal vs --debug error behavior
 
 CLI cleanup
-[✔] make summarize output distinguish "summarized" vs "no summary needed"
-[✔] review summarize/user-facing CLI messages so skipped work is reported accurately
-[~] malformed json should be a warning in docs  
+[x] make summarize output distinguish "summarized" vs "no summary needed"
+[x] review summarize/user-facing CLI messages so skipped work is reported accurately
+[x] malformed json should be a warning in docs  
 
 Web.py
 [x] add content truncation / windowing per source
 
 v13 important 2
 
+phase 1 - decisions
+
+Debug
+[x] decide whether debug mode should log exception type separately from error text
+[x] decide whether --debug should surface contained/structured errors differently
+
+CLI cleanup
+[x] decide whether summarize --all should continue on per-session failure or fail fast
+[x] review duplicate Ollama health/model calls only if logs become noisy
+
+Web.py
+[x] decide how search engines should be configured before adding config support
+[x] decide what "--query is slow" means before optimizing
+
+
+phase 2 - cli cleanup
+
 Doctor
 [ ] create and move doctor logic in cli.py to doctor.py
 [ ] refactor cli.doctor_command_run
 
-Debug
-[ ] decide whether debug mode should log exception type separately from error text
-[ ] decide whether --debug should surface contained/structured errors differently
-
 CLI cleanup
-[ ] decide whether summarize --all should continue on per-session failure or fail fast
-[ ] review duplicate Ollama health/model calls only if logs become noisy
 [ ] keep cli.py focused on orchestration only as complexity justifies
 [ ] standardize command handler/docstring shape where helpful
 
+
+phase 3 - web follow-up
+
 Web.py
 [ ] add search engine(s) to config
-[ ] --query is slow
+[ ] improve web-chat source selection beyond first-N-character truncation
+    - split page text into simple chunks/windows
+    - score chunks against the user question
+    - include top matching chunks per source
+    - keep artifacts unchanged and inspectable
+    - avoid church_search-level pipeline complexity unless proven needed
 
-
-v13 misc tasks
+v14 misc tasks
 
 Doctor
 [ ] revisit doctor output grouping only if it improves readability
@@ -365,12 +383,12 @@ Other
 [ ] parser arguments in chat
 [ ] optionally turn logs off in cli
 
-v14 prep for outside interfaces
+v15 prep for outside interfaces
 
 File system
 [ ] read file system with explicit approval
 
-v15 outside interfaces
+v16 outside interfaces
 
 Other
 [ ] website
@@ -381,3 +399,6 @@ Interface boundary
 [ ] prefer deriving result shape from real command behavior, not designing upfront
 
 to be prioritized (tbp)
+[ ] create a search engine like degoogle and load in local ai
+[ ] create a user profile
+[ ] read local files
