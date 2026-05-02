@@ -354,12 +354,12 @@ phase 3 - web follow-up
 
 Web.py
 [ ] add search engine(s) to config
-[ ] improve web-chat source selection beyond first-N-character truncation
-    - split page text into simple chunks/windows
-    - score chunks against the user question
-    - include top matching chunks per source
-    - keep artifacts unchanged and inspectable
-    - avoid church_search-level pipeline complexity unless proven needed
+[x] add simple question-aware source windows for web-chat
+[x] split each artifact content_text into bounded text windows
+[x] score windows using question terms
+[x] include top matching windows per source in the model prompt
+[x] keep artifacts unchanged and inspectable
+[x] keep fallback to first-N chars when no useful match is found
 
 v14 misc tasks
 
@@ -401,4 +401,3 @@ Interface boundary
 to be prioritized (tbp)
 [ ] create a search engine like degoogle and load in local ai
 [ ] create a user profile
-[ ] read local files
