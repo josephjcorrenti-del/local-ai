@@ -342,12 +342,12 @@ Web.py
 phase 2 - cli cleanup
 
 Doctor
-[ ] create and move doctor logic in cli.py to doctor.py
-[ ] refactor cli.doctor_command_run
+[x] create and move doctor logic in cli.py to doctor.py
+[x] refactor cli.doctor_command_run
 
 CLI cleanup
-[ ] keep cli.py focused on orchestration only as complexity justifies
-[ ] standardize command handler/docstring shape where helpful
+[x] keep cli.py focused on orchestration only as complexity justifies
+[x] standardize command handler/docstring shape where helpful
 
 
 phase 3 - web follow-up

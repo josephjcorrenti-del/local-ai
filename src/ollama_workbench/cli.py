@@ -368,6 +368,7 @@ def web_fetch_command_run(args: argparse.Namespace) -> None:
 
 
 def web_search_command_run(args: argparse.Namespace) -> None:
+    """Search the web and print fetched artifact summaries."""
     results = web_search(args.query, args.limit)
 
     print(f"query: {args.query}")
