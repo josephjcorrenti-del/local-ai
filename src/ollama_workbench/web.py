@@ -22,6 +22,7 @@ Design notes:
 import hashlib
 import json
 import re
+import time
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, UTC
@@ -131,6 +132,8 @@ def web_fetch(url: str) -> dict[str, Any]:
         url=url,
     )
 
+    started_at = time.perf_counter()
+
     req = urllib.request.Request(
         url,
         headers={
@@ -194,6 +197,8 @@ def web_fetch(url: str) -> dict[str, Any]:
         "web.fetch.ready",
         path=artifact_path,
         url=final_url,
+        event_outcome="success",
+        elapsed_ms=int((time.perf_counter() - started_at) * 1000),
     )
 
     return artifact
@@ -286,6 +291,8 @@ def web_cleanup(days: int, delete: bool) -> list[Path]:
         path=str(web_dir),
     )
 
+    started_at = time.perf_counter()
+
     if not web_dir.exists():
         log_event(
             "web.cleanup.skip_missing_dir",
@@ -319,6 +326,8 @@ def web_cleanup(days: int, delete: bool) -> list[Path]:
     log_event(
         "web.cleanup.ready",
         path=str(web_dir),
+        event_outcome="success",
+        elapsed_ms=int((time.perf_counter() - started_at) * 1000),
     )
 
     return removed

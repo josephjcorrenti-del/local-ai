@@ -151,6 +151,16 @@ Commands should fall into one of the following categories:
   - interactive workbench shell
   - SQL-like querying interface
 
+### CLI output and structured logs are separate interface surfaces
+
+- CLI output is the human/operator-facing interface.
+- Structured logs are the machine/observability interface.
+- log_event is not a command result API.
+- ELK/Filebeat consume structured logs for traceability and operational review.
+- Future UI/shell/API work should not scrape normal CLI output.
+- Future result objects may be introduced when a second interactive interface needs reusable command data.
+- Until then, command handlers may print human output directly while modules return simple structured dictionaries where useful.
+
 ### Formatting rules
 
 - Prefer plain, readable output over decorative formatting.

@@ -40,6 +40,14 @@ echo "=== doctor ==="
 run_owb doctor
 echo
 
+echo "=== read-file ==="
+run_owb read-file docs/decisions.md --max-chars 300
+echo
+
+echo "=== file-chat ==="
+run_owb file-chat docs/decisions.md "What is the policy for web artifacts?"
+echo
+
 echo "=== web-fetch ==="
 run_owb web-fetch https://example.com
 echo

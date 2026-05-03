@@ -20,6 +20,7 @@ Design notes:
 """
 
 from pathlib import Path
+import time
 from typing import Any
 
 from ollama_workbench.config import CONFIG
@@ -50,6 +51,7 @@ def fs_read(path: str, max_chars: int | None = None) -> dict[str, Any]:
     path_str = str(path)
 
     log_event("fs.read.start", path=path_str)
+    started_at = time.perf_counter()
 
     try:
         path_obj = _validate_file_path(path)
@@ -75,6 +77,7 @@ def fs_read(path: str, max_chars: int | None = None) -> dict[str, Any]:
             "fs.read.ready",
             path=path_str,
             event_outcome="success",
+            elapsed_ms=int((time.perf_counter() - started_at) * 1000),
         )
 
         return result
@@ -111,6 +114,7 @@ def fs_content_window_get(
     path_str = str(path)
 
     log_event("fs.read.start", path=path_str)
+    started_at = time.perf_counter()
 
     try:
         path_obj = _validate_file_path(path)
@@ -134,6 +138,7 @@ def fs_content_window_get(
             "fs.read.ready",
             path=path_str,
             event_outcome="success",
+            elapsed_ms=int((time.perf_counter() - started_at) * 1000),
         )
 
         return result

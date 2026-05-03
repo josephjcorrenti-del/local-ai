@@ -391,11 +391,11 @@ File system
 [x] enforce max_chars with a bounded default
 [x] return structured result with path, size, content, included_chars, truncated
 
-[ ] add read-file <path> [--max-chars N] CLI command
-[ ] print path, size, included_chars of total, and bounded content
+[x] add read-file <path> [--max-chars N] CLI command
+[x] print path, size, included_chars of total, and bounded content
 
 [x] default file access is one-time read only
-[ ] treat explicit read-file <path> invocation as operator approval for that file read
+[x] treat explicit read-file <path> invocation as operator approval for that file read
 
 [x] log fs.read.start, fs.read.ready, fs.read.error
 
@@ -414,6 +414,23 @@ File AI
 [x] print path, included_chars of total, answer
 [x] log command.start/end and fs.read lifecycle
 [x] add tests/smoke for file-chat prompt construction if practical
+
+v15.5 - logging consistency + interface-surface decision
+
+Logging consistency
+[x] verify every CLI command emits command.start and command.end OR command.error
+[x] ensure command.start/end/error always include command=<name>
+[x] add event_outcome="success" to web.fetch.ready
+[x] add event_outcome="success" to web.cleanup.ready
+[x] add elapsed_ms to web.fetch.ready
+[x] add elapsed_ms to fs.read.ready
+
+Deferred
+[ ] consider content.window.ready later only if Kibana review says it helps
+
+Decisions
+[x] document: CLI output, structured logs, and module returns are separate surfaces
+[x] document: logs are observability trace, not result API
 
 v16 outside interfaces
 
