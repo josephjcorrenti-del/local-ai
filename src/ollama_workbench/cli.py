@@ -25,12 +25,13 @@ Design notes:
 import argparse
 import json
 import os
+import sys
 import time
 from typing import Callable
-import sys
 
 from ollama_workbench.config import CONFIG
 from ollama_workbench.doctor import doctor_run
+from ollama_workbench.fs import fs_content_window_get, fs_read
 from ollama_workbench.log import log_event
 from ollama_workbench.memory import (
     session_append,
@@ -55,11 +56,11 @@ from ollama_workbench.schemas import PING_SCHEMA
 from ollama_workbench.tools import TOOL_DEFS, TOOL_REGISTRY
 from ollama_workbench.web import (
     web_artifact_content_window_get,
-    web_artifact_load,
     web_cleanup,
     web_fetch,
     web_search,
 )
+
 
 def prompt_run(user_prompt: str) -> None:
     """Run a one-off prompt against the local model."""
@@ -400,6 +401,7 @@ def web_chat_command_run(args: argparse.Namespace) -> None:
         content_window = web_artifact_content_window_get(
             artifact,
             CONFIG.web_chat_max_source_chars,
+            question=args.question,
         )
         source_windows.append((artifact, content_window))
 
@@ -542,6 +544,69 @@ def repair_command_run(args: argparse.Namespace) -> None:
         )
 
 
+def read_file_command_run(args: argparse.Namespace) -> None:
+    """Read one explicit local file and print bounded content."""
+    result = fs_read(args.path, args.max_chars)
+
+    print(f"path: {result['path']}")
+    print(f"size: {result['size']}")
+    print(
+        f"included_chars: {result['included_chars']} "
+        f"of {result['size']}"
+    )
+    print()
+    print(result["content"])
+
+
+def file_chat_command_run(args: argparse.Namespace) -> None:
+    """Answer a question using one explicit local file."""
+    content_window = fs_content_window_get(
+        args.path,
+        args.question,
+        CONFIG.web_chat_max_source_chars,
+    )
+
+    prompt = (
+        f"Question: {args.question}\n\n"
+        f"File: {content_window['path']}\n"
+        f"Included chars: {content_window['included_chars']} "
+        f"of {content_window['total_chars']}\n\n"
+        f"File content:\n{content_window['content_text']}"
+    )
+
+    ollama_ensure_running()
+
+    payload = {
+        "model": CONFIG.chat_model_name,
+        "stream": False,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "Answer the user's question using only the provided file content. "
+                    "Be concise and say when the provided file content does not contain enough information."
+                ),
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ],
+    }
+
+    result = ollama_chat(payload)
+    answer = result["message"]["content"]
+
+    print(f"question: {args.question}")
+    print(f"path: {content_window['path']}")
+    print(
+        f"included_chars: {content_window['included_chars']} "
+        f"of {content_window['total_chars']}"
+    )
+    print()
+    print(answer)
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -559,6 +624,8 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "web-cleanup": web_cleanup_command_run,
     "migrate": migrate_command_run,
     "repair": repair_command_run,
+    "read-file": read_file_command_run,
+    "file-chat": file_chat_command_run,
 }
 
 
@@ -590,7 +657,6 @@ def parser_build() -> argparse.ArgumentParser:
     p_tool = subparsers.add_parser("tool", help="Run tool-calling test")
     p_tool.add_argument("path", help="Path for directory_list tool")
 
-
     p_chat = subparsers.add_parser("chat", help="Run chat with session memory")
     p_chat.add_argument("text", help="Chat prompt text")
     p_chat.add_argument("--session", default=None, help="Session name")
@@ -610,7 +676,11 @@ def parser_build() -> argparse.ArgumentParser:
         help="Explicitly summarize one session or all sessions",
     )
     p_summarize.add_argument("--session", default=None, help="Session name")
-    p_summarize.add_argument("--all", action="store_true", help="Explicitly summarize all sessions")
+    p_summarize.add_argument(
+        "--all",
+        action="store_true",
+        help="Explicitly summarize all sessions",
+    )
 
     subparsers.add_parser("doctor", help="Run local runtime checks")
 
@@ -682,6 +752,20 @@ def parser_build() -> argparse.ArgumentParser:
         action="store_true",
         help="Show what would be repaired without writing files",
     )
+
+    p_read_file = subparsers.add_parser(
+        "read-file",
+        help="Read one explicit local file",
+    )
+    p_read_file.add_argument("path")
+    p_read_file.add_argument("--max-chars", type=int, default=None)
+
+    p_file_chat = subparsers.add_parser(
+        "file-chat",
+        help="Answer a question using one explicit local file",
+    )
+    p_file_chat.add_argument("path")
+    p_file_chat.add_argument("question")
 
     return parser
 

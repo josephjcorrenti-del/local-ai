@@ -31,6 +31,7 @@ from typing import Any
 
 from ollama_workbench.log import log_event
 from ollama_workbench.paths import paths_get
+from ollama_workbench.content_window import content_window_get
 
 
 def web_timestamp_now_get() -> str:
@@ -268,47 +269,11 @@ def web_artifact_content_window_get(
     question: str | None = None,
 ) -> dict[str, Any]:
     """Return bounded source content metadata for prompt construction."""
-    content_text = artifact.get("content_text", "")
-
-    if not question:
-        bounded_content = content_text[:max_chars]
-    else:
-        question_terms = web_text_terms_get(question)
-        windows = web_text_windows_get(content_text)
-
-        scored_windows = [
-            (web_window_score(question_terms, window), index, window)
-            for index, window in enumerate(windows)
-        ]
-
-        scored_windows.sort(key=lambda item: (-item[0], item[1]))
-
-        selected_parts = []
-        selected_chars = 0
-
-        for score, _index, window in scored_windows:
-            if score <= 0:
-                continue
-
-            remaining = max_chars - selected_chars
-            if remaining <= 0:
-                break
-
-            selected = window[:remaining]
-            selected_parts.append(selected)
-            selected_chars += len(selected)
-
-        bounded_content = "\n\n---\n\n".join(selected_parts)
-
-        if not bounded_content:
-            bounded_content = content_text[:max_chars]
-
-    return {
-        "content_text": bounded_content,
-        "included_chars": len(bounded_content),
-        "total_chars": len(content_text),
-        "truncated": len(content_text) > len(bounded_content),
-    }
+    return content_window_get(
+        artifact.get("content_text", ""),
+        max_chars,
+        question,
+    )
 
 
 def web_cleanup(days: int, delete: bool) -> list[Path]:
@@ -358,53 +323,4 @@ def web_cleanup(days: int, delete: bool) -> list[Path]:
 
     return removed
 
-WEB_STOP_WORDS = {
-    "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
-    "how", "i", "in", "is", "it", "of", "on", "or", "that", "the",
-    "this", "to", "what", "when", "where", "which", "who", "why",
-    "with",
-}
 
-
-def web_text_terms_get(text: str) -> set[str]:
-    """Return simple lowercase terms for bag-of-words matching."""
-    terms = set()
-
-    for term in re.findall(r"[a-zA-Z0-9_]+", text.lower()):
-        if len(term) < 3:
-            continue
-        if term in WEB_STOP_WORDS:
-            continue
-        terms.add(term)
-
-    return terms
-
-
-def web_text_windows_get(
-    text: str,
-    window_chars: int = 2000,
-    overlap_chars: int = 300,
-) -> list[str]:
-    """Split text into overlapping character windows."""
-    if not text:
-        return []
-
-    windows = []
-    start = 0
-
-    while start < len(text):
-        end = min(start + window_chars, len(text))
-        windows.append(text[start:end])
-
-        if end >= len(text):
-            break
-
-        start = max(end - overlap_chars, start + 1)
-
-    return windows
-
-
-def web_window_score(question_terms: set[str], window: str) -> int:
-    """Score a text window using simple bag-of-words overlap."""
-    window_terms = web_text_terms_get(window)
-    return len(question_terms & window_terms)

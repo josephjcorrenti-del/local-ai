@@ -368,13 +368,12 @@ Doctor
 [ ] revisit doctor check taxonomy only if ELK/log review justifies it
 
 Debug
-[ ] decide whether --debug should affect argparse parse errors
+[x] decide whether --debug should affect argparse parse errors
 
 CLI cleanup
 [ ] refactor repeated doctor writable-check pattern only if it improves readability without hiding behavior
-[ ] decide whether summary_inactive_minutes should remain reserved or be removed until used
+[x] decide whether summary_inactive_minutes should remain reserved or be removed until used
 [ ] tighten session naming around "load ok" vs deeper validation if needed later
-[ ] clean up CLI
 
 Other
 [ ] decide whether formats besides utf-8 should be allowed.
@@ -386,7 +385,35 @@ Other
 v15 prep for outside interfaces
 
 File system
-[ ] read file system with explicit approval
+[x] add fs_read(path, max_chars) in fs.py
+[x] validate path exists
+[x] validate path is a file, not a directory
+[x] enforce max_chars with a bounded default
+[x] return structured result with path, size, content, included_chars, truncated
+
+[ ] add read-file <path> [--max-chars N] CLI command
+[ ] print path, size, included_chars of total, and bounded content
+
+[x] default file access is one-time read only
+[ ] treat explicit read-file <path> invocation as operator approval for that file read
+
+[x] log fs.read.start, fs.read.ready, fs.read.error
+
+[x] add tests for happy path with small file
+[x] add tests for truncation path with larger file
+[x] add tests for missing file
+[x] add tests for directory instead of file
+
+[x] ensure file read behavior is read-only and has no side effects
+
+File AI
+[x] add file-chat <path> <question>
+[x] read explicit file once
+[x] shape content with content_window_get
+[x] send bounded content to Ollama
+[x] print path, included_chars of total, answer
+[x] log command.start/end and fs.read lifecycle
+[x] add tests/smoke for file-chat prompt construction if practical
 
 v16 outside interfaces
 
@@ -401,3 +428,16 @@ Interface boundary
 to be prioritized (tbp)
 [ ] create a search engine like degoogle and load in local ai
 [ ] create a user profile
+
+File system
+to be prioritized (tbp)
+
+File system
+[ ] add parser/extraction layer for non-plain-text files, similar to web extraction
+[ ] add persistent file access mode only with explicit opt-in
+[ ] add persistent-read checkbox/setting for future UI
+[ ] decide how persistent file permissions are stored and revoked
+
+Other
+[ ] add a container for chats like project.
+
