@@ -447,9 +447,9 @@ Access/source model
 [x] decide whether “source” is just a concept for now, not a module yet
 
 Output safety
-[ ] verify content commands avoid decorative output
-[ ] verify failure output stays stderr-only
-[ ] verify logs stay out of stdout unless --verbose
+[x] verify content commands avoid decorative output
+[x] verify failure output stays stderr-only
+[x] verify logs stay out of stdout unless --verbose
 
 Smoke coverage
 [x] ensure smoke test covers every major access path:
@@ -462,9 +462,19 @@ Smoke coverage
 
 v16 outside interfaces
 
-Other
-[ ] website
-[ ] ollama_workbench shell
+v16.1 - shell MVP
+
+[x] add shell command to CLI
+[x] implement REPL loop
+[x] add help command
+[x] add exit/quit handling
+[x] add default-to-chat fallback
+[x] use shlex for parsing
+[x] dispatch to existing handlers (no duplication)
+[x] smoke test basic flow
+
+Website 
+[ ] TBD
 
 Interface boundary
 [ ] revisit command result shape only when a second interface such as UI, shell, or integration is introduced
@@ -475,9 +485,6 @@ to be prioritized (tbp)
 [ ] create a user profile
 
 File system
-to be prioritized (tbp)
-
-File system
 [ ] add parser/extraction layer for non-plain-text files, similar to web extraction
 [ ] add persistent file access mode only with explicit opt-in
 [ ] add persistent-read checkbox/setting for future UI
@@ -485,4 +492,11 @@ File system
 
 Other
 [ ] add a container for chats like project.
+
+Shell
+[ ] add shell command history
+[ ] add shell autocomplete
+[ ] add multiline input
+[ ] add shell session/context awareness
+[ ] add shell-specific formatting/presentation only if needed
 

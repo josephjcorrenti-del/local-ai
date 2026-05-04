@@ -25,6 +25,7 @@ Design notes:
 import argparse
 import json
 import os
+import shlex
 import sys
 import time
 from typing import Callable
@@ -607,6 +608,135 @@ def file_chat_command_run(args: argparse.Namespace) -> None:
     print(answer)
 
 
+SHELL_HELP = """
+Available commands:
+
+Core:
+  chat <message>
+  status
+  doctor
+
+File:
+  read-file <path> [--max-chars N]
+  file-chat <path> <question>
+
+Web:
+  web-fetch <url>
+  web-search <query> [--limit N]
+  web-chat <question> --url <url>
+  web-chat <question> --query <query> [--limit N]
+
+Session:
+  sessions
+  stats [--session NAME]
+  summarize [--session NAME] [--all]
+  clear [--session NAME]
+
+Maintenance:
+  repair --session NAME [--dry-run]
+  migrate [--session NAME] [--all] [--dry-run]
+  web-cleanup [--days N] [--delete]
+
+Shell:
+  help
+  exit
+  quit
+
+Default:
+  Any input that does not start with a known command is treated as:
+    chat <input>
+""".strip()
+
+
+def shell_line_run(line: str) -> None:
+    """Run one shell input line through the existing CLI parser/handlers."""
+    stripped = line.strip()
+    if not stripped:
+        return
+
+    if stripped in {"help", "?"}:
+        print(SHELL_HELP)
+        return
+
+    if stripped in {"exit", "quit"}:
+        raise EOFError
+
+    try:
+        parts = shlex.split(stripped)
+    except ValueError as exc:
+        fail(f"parse error: {exc}")
+        return
+
+    if not parts:
+        return
+
+    known_commands = set(COMMAND_HANDLERS)
+
+    if parts[0] in known_commands:
+        argv = parts
+    else:
+        argv = ["chat", stripped]
+
+    parser = parser_build()
+    args = parser.parse_args(argv)
+
+    command = args.command
+    handler = COMMAND_HANDLERS.get(command)
+
+    if handler is None:
+        raise RuntimeError(f"Unknown command: {command}")
+
+    started_at = time.perf_counter()
+
+    log_event(
+        "command.start",
+        command=command,
+    )
+
+    try:
+        handler(args)
+    except Exception as exc:
+        log_event(
+            "command.error",
+            level="ERROR",
+            command=command,
+            event_outcome="failure",
+            error_message=str(exc),
+            error_type=type(exc).__name__,
+            error=str(exc),
+            elapsed_ms=int((time.perf_counter() - started_at) * 1000),
+        )
+        fail(f"error: {exc}")
+        return
+
+    log_event(
+        "command.end",
+        command=command,
+        event_outcome="success",
+        elapsed_ms=int((time.perf_counter() - started_at) * 1000),
+    )
+
+
+def shell_command_run(args: argparse.Namespace) -> None:
+    """Run an interactive ollama_workbench shell."""
+    del args
+
+    print("ollama_workbench shell")
+    print("type help for commands, exit to quit")
+    print()
+
+    while True:
+        try:
+            line = input("owb> ")
+            shell_line_run(line)
+        except EOFError:
+            print()
+            break
+        except KeyboardInterrupt:
+            print()
+            continue
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -626,6 +756,7 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "repair": repair_command_run,
     "read-file": read_file_command_run,
     "file-chat": file_chat_command_run,
+    "shell": shell_command_run,
 }
 
 
@@ -647,6 +778,7 @@ def parser_build() -> argparse.ArgumentParser:
         default="data",
         help="AI data directory under ~/ai (default: data)",
     )
+
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     p_prompt = subparsers.add_parser("prompt", help="Run a plain prompt")
@@ -766,6 +898,11 @@ def parser_build() -> argparse.ArgumentParser:
     )
     p_file_chat.add_argument("path")
     p_file_chat.add_argument("question")
+
+    subparsers.add_parser(
+        "shell",
+        help="Run interactive ollama_workbench shell",
+    )
 
     return parser
 
