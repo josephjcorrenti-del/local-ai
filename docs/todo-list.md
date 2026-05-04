@@ -432,6 +432,34 @@ Decisions
 [x] document: CLI output, structured logs, and module returns are separate surfaces
 [x] document: logs are observability trace, not result API
 
+v15.6 - interface readiness polish
+
+Command inventory
+[x] list commands by category: content / report / artifact / action
+[x] identify which commands are likely UI/shell entrypoints first
+[x] mark commands that are operator-only and should stay CLI-first
+
+Access/source model
+[x] document current source types:
+    - web artifact
+    - explicit file read
+    - session memory
+[x] decide whether “source” is just a concept for now, not a module yet
+
+Output safety
+[ ] verify content commands avoid decorative output
+[ ] verify failure output stays stderr-only
+[ ] verify logs stay out of stdout unless --verbose
+
+Smoke coverage
+[x] ensure smoke test covers every major access path:
+    - runtime
+    - sessions
+    - web
+    - file
+    - file AI
+    - cleanup
+
 v16 outside interfaces
 
 Other

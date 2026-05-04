@@ -1,0 +1,75 @@
+Command Inventory
+
+Command        Category     Input Type        Output Type        Source Type
+--------------------------------------------------------------------------------
+prompt         content      text              AI answer          none
+json           test         text              JSON output        none
+tool           test         text              tool output        none
+
+chat           content      text + session    AI answer          session memory
+clear          action       session           confirmation       session memory
+sessions       report       none              list               session memory
+stats          report       none              stats              session memory
+summarize      action       session           summary status     session memory
+
+status         report       none              system info        runtime
+doctor         report       none              health checks      runtime
+
+web-fetch      artifact     URL               artifact preview   web
+web-search     report       query             list of artifacts  web
+web-chat       content      URL/query + Q     AI answer          web artifacts
+web-cleanup    action       none              confirmation       web artifacts
+
+read-file      content      file path         file content       local file
+file-chat      content      file + question   AI answer          local file
+
+Decision: Commands fall into four categories
+
+- content:
+  Produces user-facing content (AI answer or raw content)
+  Examples: chat, web-chat, file-chat, read-file
+
+- report:
+  Produces structured human-readable summaries
+  Examples: status, doctor, stats, sessions, web-search
+
+- artifact:
+  Creates or previews stored artifacts
+  Examples: web-fetch
+
+- action:
+  Mutates or cleans system state
+  Examples: clear, summarize, web-cleanup, repair, migrate
+
+Decision: Source is a concept, not a module
+
+Current source types:
+- web artifacts (stored JSON from fetch/search)
+- local files (explicit read-file/file-chat)
+- session memory (stored conversation state)
+
+Commands may use one or more sources.
+
+The concept of “source” is intentionally not abstracted into a shared module yet.
+It will only be formalized when a second interface (UI/shell/API) requires it.
+
+Likely UI / shell entrypoints
+chat
+web-chat
+file-chat
+read-file
+web-search
+web-fetch
+status
+summarize
+repair
+
+Likely CLI/operator-first
+doctor
+clear
+migrate
+web-cleanup
+stats
+sessions
+json
+tool
