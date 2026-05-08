@@ -630,7 +630,8 @@ Tests / smoke
 to be prioritized (tbp)
 [ ] create a search engine like degoogle and load in local ai
 [ ] create a user profile
-[ ] create a 
+[ ] AI should tell user where data lives.
+
 
 File system
 [ ] add parser/extraction layer for non-plain-text files, similar to web extraction

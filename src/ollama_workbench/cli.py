@@ -767,7 +767,6 @@ def shell_line_run(line: str, state: dict[str, str]) -> None:
 def shell_command_run(args: argparse.Namespace) -> None:
     """Run an interactive ollama_workbench shell."""
     del args
-    readline.parse_and_bind("tab: complete")
 
     state = {
         "session": CONFIG.default_session_name,
@@ -776,6 +775,9 @@ def shell_command_run(args: argparse.Namespace) -> None:
     print("ollama_workbench shell")
     print(f"model: {CONFIG.chat_model_name}")
     print(f"session: {state['session']}")
+    info("Warming model...")
+    shell_warmup_run()
+    info("Model ready")
     print("type help for commands, exit to quit")
     print()
 
@@ -790,6 +792,24 @@ def shell_command_run(args: argparse.Namespace) -> None:
         except KeyboardInterrupt:
             print()
             continue
+
+
+def shell_warmup_run() -> None:
+    """Warm LLM up, Kris.  I'm about to."""
+    ollama_ensure_running()
+
+    payload = {
+        "model": CONFIG.chat_model_name,
+        "stream": False,
+        "messages": [
+            {
+                "role": "user",
+                "content": "Reply with exactly: ready",
+            }
+        ],
+    }
+
+    ollama_chat(payload)
 
 
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
