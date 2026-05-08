@@ -460,6 +460,42 @@ Smoke coverage
     - file AI
     - cleanup
 
+v15.7 - multi-source (file + web)
+
+Source handling
+[ ] allow one question to use multiple explicit sources
+[ ] support local file sources
+[ ] support web URL sources
+[ ] keep source access explicit and one-time
+[ ] keep web artifacts unchanged
+[ ] keep file reads read-only
+
+CLI
+[ ] add multi-source command shape
+[ ] decide command name: source-chat vs multi-chat
+[ ] accept repeated --file PATH
+[ ] accept repeated --url URL
+[ ] require one question
+[ ] print sources used
+[ ] print included_chars per source
+[ ] print final answer
+
+Context shaping
+[ ] use content_window_get per source
+[ ] combine bounded source windows into one prompt
+[ ] preserve source labels in prompt
+[ ] enforce per-source content bounds
+[ ] avoid hidden source discovery
+
+Logging / tests
+[ ] verify command.start/end/error logs
+[ ] verify fs.read lifecycle logs for file sources
+[ ] verify web.fetch lifecycle logs for URL sources
+[ ] add mocked prompt-construction test
+[ ] smoke test with one file + one URL
+
+v16 outside interfaces
+
 v16 outside interfaces
 
 v16.1 - shell MVP
@@ -470,19 +506,131 @@ v16.1 - shell MVP
 [x] add exit/quit handling
 [x] add default-to-chat fallback
 [x] use shlex for parsing
-[x] dispatch to existing handlers (no duplication)
+[x] dispatch to existing handlers without duplicating command logic
 [x] smoke test basic flow
+[x] add pytest for default-to-chat routing
 
-Website 
+v16.2 - make shell usable
+
+Help / discoverability
+[x] improve shell help formatting
+[x] add examples to shell help
+[ ] add help by topic if useful: help file, help web, help session
+[x] show default-to-chat behavior clearly
+
+Shell UX
+[x] add command history
+[x] add Ctrl+D clean exit behavior
+[x] keep Ctrl+C from killing shell
+[x] improve parse-error messages
+[ ] add clear screen command if useful
+[x] add shell banner with current model and session
+[x] add banner command to reprint shell context
+
+Session behavior
+[x] decide whether shell should have a default session
+[x] support changing session inside shell if needed
+[x] make chat default use selected session if shell session exists
+
+Usability guardrails
+[x] keep shell commands identical to CLI commands where practical
+[x] avoid shell-only business logic
+[x] keep shell as orchestration layer
+[x] preserve command.start/end/error logging
+
+Tests / smoke
+[x] test explicit command routing
+[x] test help command does not call CLI handlers
+[x] manual smoke test interactive flow
+
+v16.3 - workspace / project container
+
+Concept
+[ ] define workspace/project container purpose
+[ ] decide naming: workspace vs project
+[ ] decide whether workspace is CLI-visible first or shell-visible first
+[ ] keep workspace as grouping metadata, not hidden behavior
+
+Storage
+[ ] define workspace storage location under app data root
+[ ] define workspace file shape
+[ ] store workspace name/id
+[ ] store linked session names
+[ ] store linked file paths
+[ ] store linked web artifact paths
+[ ] store notes/summary field if useful
+
+Commands
+[ ] add workspace-create <name>
+[ ] add workspace-list
+[ ] add workspace-show <name>
+[ ] add workspace-add-session <workspace> <session>
+[ ] add workspace-add-file <workspace> <path>
+[ ] add workspace-add-web-artifact <workspace> <artifact_path>
+[ ] add workspace-remove-* only after add/show behavior is stable
+
+Shell integration
+[ ] decide whether shell can select active workspace
+[ ] show active workspace in shell banner if selected
+[ ] keep workspace selection explicit
+[ ] avoid automatic source loading from workspace in v1
+
+Guardrails
+[ ] do not create persistent file access silently
+[ ] do not auto-read workspace files
+[ ] do not auto-fetch workspace web sources
+[ ] keep workspace as an inspectable container
+
+Tests / smoke
+[ ] add tests for workspace create/list/show
+[ ] add tests for adding session/file/artifact links
+[ ] smoke test workspace flow
+
+v16.4 - user profile
+
+Concept
+[ ] define user profile purpose
+[ ] decide what belongs in profile vs config
+[ ] keep profile explicit and inspectable
+[ ] avoid hidden personalization behavior
+
+Storage
+[ ] define profile storage location under app data root
+[ ] define profile file shape
+[ ] store display name only if useful
+[ ] store preferred default model only if needed
+[ ] store preferred default session/workspace only if needed
+[ ] store shell preferences only if needed
+
+Commands
+[ ] add profile-show
+[ ] add profile-set <key> <value>
+[ ] add profile-clear <key>
+[ ] add profile-reset only if needed
+
+Shell integration
+[ ] show profile info in shell banner only if useful
+[ ] use profile defaults only when explicit and documented
+[ ] allow CLI flags to override profile defaults
+
+Guardrails
+[ ] no sensitive personal data by default
+[ ] no hidden behavior based on profile
+[ ] no automatic memory injection from profile
+[ ] keep profile separate from chat/session memory
+
+Tests / smoke
+[ ] add tests for profile read/write
+[ ] add tests for CLI override behavior if defaults are added
+[ ] smoke test profile commands
+
+17 - Website 
 [ ] TBD
-
-Interface boundary
-[ ] revisit command result shape only when a second interface such as UI, shell, or integration is introduced
-[ ] prefer deriving result shape from real command behavior, not designing upfront
 
 to be prioritized (tbp)
 [ ] create a search engine like degoogle and load in local ai
 [ ] create a user profile
+[ ] create a 
 
 File system
 [ ] add parser/extraction layer for non-plain-text files, similar to web extraction
@@ -500,3 +648,8 @@ Shell
 [ ] add shell session/context awareness
 [ ] add shell-specific formatting/presentation only if needed
 
+Tests / smoke
+[ ] test default-to-chat routing
+[ ] test explicit command routing
+[ ] test help command does not call CLI handlers
+[ ] manual smoke test interactive flow

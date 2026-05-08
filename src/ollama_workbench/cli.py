@@ -25,6 +25,7 @@ Design notes:
 import argparse
 import json
 import os
+import readline
 import shlex
 import sys
 import time
@@ -627,6 +628,8 @@ Web:
   web-chat <question> --query <query> [--limit N]
 
 Session:
+  session
+  session NAME
   sessions
   stats [--session NAME]
   summarize [--session NAME] [--all]
@@ -639,19 +642,60 @@ Maintenance:
 
 Shell:
   help
+  banner
+  session
+  session NAME
   exit
   quit
 
 Default:
   Any input that does not start with a known command is treated as:
-    chat <input>
+    chat <input> using the active shell session
+
+Examples:
+
+  hello world
+    chat using the active shell session
+
+  chat "hello" --session scratch
+    chat using an explicit session override
+
+  session project-notes
+    switch the active shell session
+
+  banner
+    show current shell model and active session
+
+  file-chat README.md "what does this project do?"
+    ask about one explicit local file
+
+  web-chat "summarize this page" --url https://example.com
+    ask about one explicit URL
+
+  web-chat "python logging basics" --query "python logging best practices"
+    search the web and answer from fetched sources
 """.strip()
 
 
-def shell_line_run(line: str) -> None:
+def shell_line_run(line: str, state: dict[str, str]) -> None:
     """Run one shell input line through the existing CLI parser/handlers."""
     stripped = line.strip()
     if not stripped:
+        return
+
+    if stripped == "banner":
+        print("ollama_workbench shell")
+        print(f"model: {CONFIG.chat_model_name}")
+        print(f"session: {state['session']}")
+        return
+
+    if stripped == "session":
+        print(f"session: {state['session']}")
+        return
+
+    if stripped.startswith("session "):
+        state["session"] = stripped.split(" ", 1)[1].strip()
+        ok(f"Session set ({state['session']})")
         return
 
     if stripped in {"help", "?"}:
@@ -676,6 +720,9 @@ def shell_line_run(line: str) -> None:
         argv = parts
     else:
         argv = ["chat", stripped]
+
+    if argv[0] == "chat" and "--session" not in argv:
+        argv.extend(["--session", state["session"]])
 
     parser = parser_build()
     args = parser.parse_args(argv)
@@ -720,17 +767,25 @@ def shell_line_run(line: str) -> None:
 def shell_command_run(args: argparse.Namespace) -> None:
     """Run an interactive ollama_workbench shell."""
     del args
+    readline.parse_and_bind("tab: complete")
+
+    state = {
+        "session": CONFIG.default_session_name,
+    }
 
     print("ollama_workbench shell")
+    print(f"model: {CONFIG.chat_model_name}")
+    print(f"session: {state['session']}")
     print("type help for commands, exit to quit")
     print()
 
     while True:
         try:
-            line = input("owb> ")
-            shell_line_run(line)
+            line = input(f"owb:{state['session']}> ")
+            shell_line_run(line, state)
         except EOFError:
             print()
+            info("Exiting shell")
             break
         except KeyboardInterrupt:
             print()
