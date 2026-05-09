@@ -543,6 +543,12 @@ Tests / smoke
 [x] test help command does not call CLI handlers
 [x] manual smoke test interactive flow
 
+v16.2.1
+[x] warmup (done)
+[x] streaming responses
+[ ] consider shorter system prompt for shell
+[ ] consider lightweight shell model
+
 v16.3 - workspace / project container
 
 Concept
@@ -631,6 +637,7 @@ to be prioritized (tbp)
 [ ] create a search engine like degoogle and load in local ai
 [ ] create a user profile
 [ ] AI should tell user where data lives.
+[ ] move shell logic out of cli
 
 
 File system

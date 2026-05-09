@@ -470,3 +470,74 @@ def ollama_generate(prompt: str, model_name: str | None = None) -> str:
     )
 
     return response
+
+
+def ollama_chat_stream(payload: dict[str, Any]):
+    """Send a streaming chat request to Ollama and yield content chunks."""
+    started_at = time.perf_counter()
+
+    model_name = payload.get("model")
+    model = model_name if isinstance(model_name, str) else None
+
+    log_event(
+        "ollama.chat.stream.request",
+        model=model,
+        path="/api/chat",
+    )
+
+    if isinstance(model_name, str):
+        ollama_model_ensure_available(model_name)
+
+    stream_payload = dict(payload)
+    stream_payload["stream"] = True
+
+    url = f"{CONFIG.ollama_base_url}/api/chat"
+    data = json.dumps(stream_payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=CONFIG.request_timeout_s) as resp:
+            for raw_line in resp:
+                line = raw_line.decode("utf-8").strip()
+                if not line:
+                    continue
+
+                chunk = json.loads(line)
+
+                message = chunk.get("message", {})
+                if isinstance(message, dict):
+                    content = message.get("content", "")
+                    if isinstance(content, str) and content:
+                        yield content
+
+                if chunk.get("done") is True:
+                    break
+
+        log_event(
+            "ollama.chat.stream.ready",
+            model=model,
+            path="/api/chat",
+            event_outcome="success",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
+
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        log_event(
+            "ollama.chat.stream.error",
+            level="ERROR",
+            model=model,
+            path="/api/chat",
+            event_outcome="failure",
+            error_message=f"HTTP {exc.code}: {body}",
+            error_type=type(exc).__name__,
+            error=f"HTTP {exc.code}: {body}",
+            elapsed_ms=_elapsed_ms_get(started_at),
+        )
+        raise RuntimeError(f"Ollama HTTP error {exc.code}: {body}") from exc

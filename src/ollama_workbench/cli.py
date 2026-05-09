@@ -51,6 +51,7 @@ from ollama_workbench.paths import paths_get
 from ollama_workbench.runtime import (
     ai_status_show,
     ollama_chat,
+    ollama_chat_stream,
     ollama_ensure_running,
     ollama_is_healthy,
 )
@@ -229,9 +230,16 @@ def tool_run(path: str) -> None:
     print(final["message"]["content"])
 
 
-def chat_run(user_prompt: str, session_name: str | None = None) -> None:
+def chat_run(
+    user_prompt: str,
+    session_name: str | None = None,
+    model_name: str | None = None,
+    stream: bool = False,
+) -> None:
     """Run chat with optional session memory persistence."""
     ollama_ensure_running()
+
+    model = model_name or CONFIG.chat_model_name
 
     messages = [
         {
@@ -248,19 +256,25 @@ def chat_run(user_prompt: str, session_name: str | None = None) -> None:
     messages.append({"role": "user", "content": user_prompt})
 
     payload = {
-        "model": CONFIG.chat_model_name,
-        "stream": False,
+        "model": model,
+        "stream": stream,
         "messages": messages,
     }
 
-    result = ollama_chat(payload)
-    answer = result["message"]["content"]
-
-    print(answer)
+    if stream:
+        parts: list[str] = []
+        for chunk in ollama_chat_stream(payload):
+            print(chunk, end="", flush=True)
+            parts.append(chunk)
+        print()
+        answer = "".join(parts)
+    else:
+        result = ollama_chat(payload)
+        answer = result["message"]["content"]
+        print(answer)
 
     session_append("user", user_prompt, session_name)
     session_append("assistant", answer, session_name)
-
 
 def clear_run(session_name: str | None = None) -> None:
     """Clear stored messages for a session."""
@@ -679,13 +693,14 @@ Examples:
 
 def shell_line_run(line: str, state: dict[str, str]) -> None:
     """Run one shell input line through the existing CLI parser/handlers."""
+
     stripped = line.strip()
     if not stripped:
         return
 
     if stripped == "banner":
         print("ollama_workbench shell")
-        print(f"model: {CONFIG.chat_model_name}")
+        print(f"model: {state['model']}")
         print(f"session: {state['session']}")
         return
 
@@ -741,7 +756,10 @@ def shell_line_run(line: str, state: dict[str, str]) -> None:
     )
 
     try:
-        handler(args)
+        if command == "chat":
+            chat_run(args.text, args.session, state["model"], stream=True)
+        else:
+            handler(args)
     except Exception as exc:
         log_event(
             "command.error",
@@ -766,17 +784,18 @@ def shell_line_run(line: str, state: dict[str, str]) -> None:
 
 def shell_command_run(args: argparse.Namespace) -> None:
     """Run an interactive ollama_workbench shell."""
-    del args
+    model_name = CONFIG.small_model_name if args.small else CONFIG.chat_model_name
 
     state = {
         "session": CONFIG.default_session_name,
+        "model": model_name,
     }
 
     print("ollama_workbench shell")
-    print(f"model: {CONFIG.chat_model_name}")
+    print(f"model: {state['model']}")
     print(f"session: {state['session']}")
     info("Warming model...")
-    shell_warmup_run()
+    shell_warmup_run(state["model"])
     info("Model ready")
     print("type help for commands, exit to quit")
     print()
@@ -794,12 +813,12 @@ def shell_command_run(args: argparse.Namespace) -> None:
             continue
 
 
-def shell_warmup_run() -> None:
+def shell_warmup_run(model_name: str) -> None:
     """Warm LLM up, Kris.  I'm about to."""
     ollama_ensure_running()
 
     payload = {
-        "model": CONFIG.chat_model_name,
+        "model": model_name,
         "stream": False,
         "messages": [
             {
@@ -974,9 +993,14 @@ def parser_build() -> argparse.ArgumentParser:
     p_file_chat.add_argument("path")
     p_file_chat.add_argument("question")
 
-    subparsers.add_parser(
+    p_shell = subparsers.add_parser(
         "shell",
         help="Run interactive ollama_workbench shell",
+    )
+    p_shell.add_argument(
+        "--small",
+        action="store_true",
+        help="Use small model for faster interactive shell responses",
     )
 
     return parser

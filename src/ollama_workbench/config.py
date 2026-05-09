@@ -34,6 +34,7 @@ class AppConfig:
 
     lightweight_model_name: str = "phi3:mini"
     large_model_name: str = "qwen2.5-coder:3b"
+    small_model_name: str = "phi3:mini"
 
     ai_start_script_name: str = "ai_start.sh"
     ai_status_script_name: str = "ai_status.sh"
