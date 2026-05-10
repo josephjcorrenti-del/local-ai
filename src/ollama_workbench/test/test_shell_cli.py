@@ -1,5 +1,6 @@
-def test_shell_line_defaults_to_chat(monkeypatch):
+def test_shell_line_defaults_to_chat():
     from ollama_workbench import cli
+    from ollama_workbench import shell
 
     called = {}
 
@@ -10,11 +11,12 @@ def test_shell_line_defaults_to_chat(monkeypatch):
         called["model"] = model_name
         called["stream"] = stream
 
-    monkeypatch.setattr(cli, "chat_run", fake_chat_run)
-
-    cli.shell_line_run(
+    shell.shell_line_run(
         "hello world",
         {"session": "default", "model": "test-model"},
+        parser_build=cli.parser_build,
+        command_handlers=cli.COMMAND_HANDLERS,
+        chat_run=fake_chat_run,
     )
 
     assert called["command"] == "chat"
