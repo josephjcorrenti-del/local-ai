@@ -584,8 +584,8 @@ Commands (CLI-first)
 Shell integration
 [x] decide shell can select active workspace
 [x] implement workspace NAME (create/select active workspace)
-[ ] link active session to workspace when workspace is active
-[ ] link active workspace to session when session is set
+[x] link active session to workspace when workspace is active
+[x] link active workspace to session when session is set
 [x] show active workspace in shell banner
 [x] keep workspace selection explicit
 [x] avoid automatic source loading from workspace in v1

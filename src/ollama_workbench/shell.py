@@ -10,7 +10,11 @@ from ollama_workbench.config import CONFIG
 from ollama_workbench.log import log_event
 from ollama_workbench.output import fail, info, ok
 from ollama_workbench.runtime import ollama_chat, ollama_ensure_running
-from ollama_workbench.workspace import workspace_create, workspace_load
+from ollama_workbench.workspace import (
+    workspace_create,
+    workspace_load,
+    workspace_session_add,
+)
 
 SHELL_HELP = """
 Available commands:
@@ -108,6 +112,7 @@ def shell_line_run(
     if stripped.startswith("session "):
         state["session"] = stripped.split(" ", 1)[1].strip()
         ok(f"Session set ({state['session']})")
+        _workspace_session_link_if_active(state)
         return
 
     if stripped.startswith("workspace "):
@@ -121,6 +126,7 @@ def shell_line_run(
 
         state["workspace"] = name
         ok(f"Workspace set ({name})")
+        _workspace_session_link_if_active(state)
         return
 
     if stripped == "workspace":
@@ -258,3 +264,11 @@ def shell_warmup_run(model_name: str) -> None:
     }
 
     ollama_chat(payload)
+
+
+def _workspace_session_link_if_active(state: dict[str, str]) -> None:
+    workspace_name = state.get("workspace")
+    session_name = state.get("session")
+
+    if workspace_name and session_name:
+        workspace_session_add(workspace_name, session_name)
