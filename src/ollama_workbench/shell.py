@@ -81,6 +81,17 @@ Examples:
 
   web-chat "python logging basics" --query "python logging best practices"
     search the web and answer from fetched sources
+
+Workspace:
+  workspace
+  workspace NAME
+  workspace-create <name>
+  workspace-list
+  workspace-show <name>
+  workspace-add-session <workspace> <session>
+  workspace-add-file <workspace> <path>
+  workspace-add-web-artifact <workspace> <artifact_path>
+  workspace-chat <workspace> <question>
 """.strip()
 
 
@@ -231,7 +242,7 @@ def shell_command_run(
 
     while True:
         try:
-            line = input(f"owb:{state['session']}> ")
+            line = input(_prompt_get(state))
             shell_line_run(
                 line,
                 state,
@@ -272,3 +283,13 @@ def _workspace_session_link_if_active(state: dict[str, str]) -> None:
 
     if workspace_name and session_name:
         workspace_session_add(workspace_name, session_name)
+
+
+def _prompt_get(state: dict[str, str]) -> str:
+    workspace_name = state.get("workspace")
+    session_name = state["session"]
+
+    if workspace_name:
+        return f"owb:{workspace_name}.{session_name}> "
+
+    return f"owb:{session_name}> "
