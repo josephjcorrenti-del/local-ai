@@ -549,47 +549,67 @@ v16.2.1
 [ ] consider shorter system prompt for shell
 [ ] consider lightweight shell model
 
-v16.3 - workspace / project container
+v16.3 - workspace container
 
 Concept
-[ ] define workspace/project container purpose
-[ ] decide naming: workspace vs project
-[ ] decide whether workspace is CLI-visible first or shell-visible first
-[ ] keep workspace as grouping metadata, not hidden behavior
+[x] define workspace container purpose (reference point grouping)
+[x] decide naming: workspace
+[x] decide workspace is grouping metadata, not hidden behavior
+[x] decide sessions, files, web artifacts, notes are supported references
+[x] decide sessions can belong to multiple workspaces
+[x] decide workspace owns relationships (no reverse pointer in session)
+[x] decide CLI-visible first, shell integration second
 
 Storage
-[ ] define workspace storage location under app data root
-[ ] define workspace file shape
-[ ] store workspace name/id
-[ ] store linked session names
-[ ] store linked file paths
-[ ] store linked web artifact paths
-[ ] store notes/summary field if useful
+[x] define workspace storage location under app data root
+[x] define workspace file shape (schema locked in decisions.md)
+[x] store workspace name (used as identifier)
+[x] store linked session names
+[x] store linked file paths
+[x] store linked web artifact paths
+[x] store notes/summary field
+[x] add created_at / updated_at timestamps
+[x] ensure add operations are idempotent (no duplicate references)
+[x] ignore unknown fields on load (forward compatibility)
 
-Commands
-[ ] add workspace-create <name>
-[ ] add workspace-list
-[ ] add workspace-show <name>
-[ ] add workspace-add-session <workspace> <session>
-[ ] add workspace-add-file <workspace> <path>
-[ ] add workspace-add-web-artifact <workspace> <artifact_path>
-[ ] add workspace-remove-* only after add/show behavior is stable
+Commands (CLI-first)
+[x] add workspace-create <name>
+[x] add workspace-list
+[x] add workspace-show <name>
+[x] add workspace-add-session <workspace> <session>
+[x] add workspace-add-file <workspace> <path>
+[x] add workspace-add-web-artifact <workspace> <artifact_path>
+[x] do NOT add remove commands until add/show is stable
 
 Shell integration
-[ ] decide whether shell can select active workspace
-[ ] show active workspace in shell banner if selected
-[ ] keep workspace selection explicit
-[ ] avoid automatic source loading from workspace in v1
+[x] decide shell can select active workspace
+[ ] implement workspace NAME (create/select active workspace)
+[ ] link active session to workspace when workspace is active
+[ ] link active workspace to session when session is set
+[ ] show active workspace in shell banner
+[x] keep workspace selection explicit
+[x] avoid automatic source loading from workspace in v1
 
 Guardrails
-[ ] do not create persistent file access silently
-[ ] do not auto-read workspace files
-[ ] do not auto-fetch workspace web sources
-[ ] keep workspace as an inspectable container
+[x] do not create persistent file access silently
+[x] do not auto-read workspace files
+[x] do not auto-fetch workspace web sources
+[x] do not auto-inject workspace into normal chat
+[x] keep workspace as inspectable container
+
+Workspace chat (future but defined)
+[x] define workspace-chat as explicit command
+[x] define use of existing bag-of-words / windowing for files
+[x] define output should show which sources were used
+[ ] implement workspace-chat (after core commands stabilize)
 
 Tests / smoke
-[ ] add tests for workspace create/list/show
-[ ] add tests for adding session/file/artifact links
+[x] add tests for workspace create/list/show
+[x] add tests for idempotent add operations
+[x] add tests for session linking behavior
+[x] add tests for file/artifact linking
+[x] manual smoke test CLI workflow
+[ ] manual smoke test shell workspace selection fact links
 [ ] smoke test workspace flow
 
 v16.4 - user profile

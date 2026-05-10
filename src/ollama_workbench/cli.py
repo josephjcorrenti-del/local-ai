@@ -62,6 +62,14 @@ from ollama_workbench.web import (
     web_fetch,
     web_search,
 )
+from ollama_workbench.workspace import (
+    workspace_create,
+    workspace_file_add,
+    workspace_load,
+    workspace_names_get,
+    workspace_session_add,
+    workspace_web_artifact_add,
+)
 
 
 def prompt_run(user_prompt: str) -> None:
@@ -632,6 +640,55 @@ def shell_command_run(args: argparse.Namespace) -> None:
     )
 
 
+def workspace_create_command_run(args: argparse.Namespace) -> None:
+    workspace_create(args.name)
+    ok(f"Workspace created ({args.name})")
+
+
+def workspace_list_command_run(args: argparse.Namespace) -> None:
+    del args
+    for name in workspace_names_get():
+        print(name)
+
+
+def workspace_show_command_run(args: argparse.Namespace) -> None:
+    data = workspace_load(args.name)
+    print(json.dumps(data, indent=2))
+
+
+def workspace_add_session_command_run(args: argparse.Namespace) -> None:
+    result = workspace_session_add(args.workspace, args.session)
+
+    if result["changed"]:
+        ok(f"Workspace session added ({args.workspace}) session={args.session}")
+    else:
+        info(f"Workspace session already linked ({args.workspace}) session={args.session}")
+
+
+def workspace_add_file_command_run(args: argparse.Namespace) -> None:
+    result = workspace_file_add(args.workspace, args.path)
+
+    if result["changed"]:
+        ok(f"Workspace file added ({args.workspace}) path={args.path}")
+    else:
+        info(f"Workspace file already linked ({args.workspace}) path={args.path}")
+
+
+def workspace_add_web_artifact_command_run(args: argparse.Namespace) -> None:
+    result = workspace_web_artifact_add(args.workspace, args.artifact_path)
+
+    if result["changed"]:
+        ok(
+            f"Workspace web artifact added ({args.workspace}) "
+            f"path={args.artifact_path}"
+        )
+    else:
+        info(
+            f"Workspace web artifact already linked ({args.workspace}) "
+            f"path={args.artifact_path}"
+        )
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -652,6 +709,12 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "read-file": read_file_command_run,
     "file-chat": file_chat_command_run,
     "shell": shell_command_run,
+    "workspace-create": workspace_create_command_run,
+    "workspace-list": workspace_list_command_run,
+    "workspace-show": workspace_show_command_run,
+    "workspace-add-session": workspace_add_session_command_run,
+    "workspace-add-file": workspace_add_file_command_run,
+    "workspace-add-web-artifact": workspace_add_web_artifact_command_run,
 }
 
 
@@ -803,6 +866,44 @@ def parser_build() -> argparse.ArgumentParser:
         action="store_true",
         help="Use small model for faster interactive shell responses",
     )
+
+    p_ws_create = subparsers.add_parser(
+        "workspace-create",
+        help="Create a workspace",
+    )
+    p_ws_create.add_argument("name")
+
+    subparsers.add_parser(
+        "workspace-list",
+        help="List workspaces",
+    )
+
+    p_ws_show = subparsers.add_parser(
+        "workspace-show",
+        help="Show workspace",
+    )
+    p_ws_show.add_argument("name")
+
+    p_ws_add_session = subparsers.add_parser(
+        "workspace-add-session",
+        help="Add a session reference to a workspace",
+    )
+    p_ws_add_session.add_argument("workspace")
+    p_ws_add_session.add_argument("session")
+
+    p_ws_add_file = subparsers.add_parser(
+        "workspace-add-file",
+        help="Add a file reference to a workspace",
+    )
+    p_ws_add_file.add_argument("workspace")
+    p_ws_add_file.add_argument("path")
+
+    p_ws_add_web_artifact = subparsers.add_parser(
+        "workspace-add-web-artifact",
+        help="Add a web artifact reference to a workspace",
+    )
+    p_ws_add_web_artifact.add_argument("workspace")
+    p_ws_add_web_artifact.add_argument("artifact_path")
 
     return parser
 

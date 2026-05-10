@@ -275,3 +275,46 @@ Commands should fall into one of the following categories:
   - reproducibility
   - inspectability
   - debuggability
+
+## Workspace model
+
+- The chosen name is `workspace`.
+- A workspace is a named container of reference points.
+- A workspace stores references only, not embedded source content.
+- Workspaces may link to:
+  - session names
+  - local file paths
+  - web artifact paths
+  - lightweight notes/summary text
+- Workspaces do not auto-load context.
+- Workspaces do not auto-read files.
+- Workspaces do not auto-fetch web sources.
+- Workspaces do not implicitly inject context into normal chat.
+- Normal chat remains independent of workspace context.
+
+### Workspace relationships
+
+- Sessions can belong to more than one workspace.
+- The relationship is owned by the workspace.
+- Session files should not store a workspace pointer in v1.
+- Adding a session to a workspace should be idempotent and should not duplicate entries.
+- Adding a session to one workspace must not remove it from any other workspace.
+
+### Shell workspace behavior
+
+- The shell may have an active workspace and an active session.
+- `workspace NAME` should create or select the active workspace.
+- `session NAME` should select the active session.
+- If a workspace is active when a session is selected, that session should be linked to the workspace.
+- If a session is active when a workspace is selected, that session should be linked to the workspace.
+- A workspace may exist without any linked sessions.
+- A linked session is a reference point, not an automatically loaded context source.
+- The shell banner should show the active workspace when one is selected.
+
+### Workspace chat behavior
+
+- Workspace references become usable context only through an explicit workspace-aware command.
+- A future `workspace-chat` command may use workspace reference points to answer a question.
+- `workspace-chat` should use existing bounded relevance selection, such as bag-of-words/content-window logic, for linked files and artifacts.
+- If workspace files are referenced by a workspace-aware chat command, they should be considered through bounded relevant windows, not silently ignored.
+- Workspace chat output should show which reference points were used.
