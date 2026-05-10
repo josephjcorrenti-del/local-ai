@@ -56,3 +56,27 @@ def test_workspace_adds_are_idempotent(monkeypatch, tmp_path):
     assert loaded["sessions"] == ["default"]
     assert loaded["files"] == ["README.md"]
     assert loaded["web_artifacts"] == ["/tmp/artifact.json"]
+
+def test_prompt_get_with_workspace():
+    from ollama_workbench.shell import _prompt_get
+
+    prompt = _prompt_get(
+        {
+            "workspace": "test-ws",
+            "session": "default",
+        }
+    )
+
+    assert prompt == "owb:test-ws.default> "
+
+def test_prompt_get_without_workspace():
+    from ollama_workbench.shell import _prompt_get
+
+    prompt = _prompt_get(
+        {
+            "workspace": None,
+            "session": "default",
+        }
+    )
+
+    assert prompt == "owb:default> "
