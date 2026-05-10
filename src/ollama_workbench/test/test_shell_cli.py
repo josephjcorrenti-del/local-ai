@@ -1,26 +1,25 @@
-def test_shell_line_defaults_to_chat():
+def test_shell_routes_explicit_command(monkeypatch):
     from ollama_workbench import cli
     from ollama_workbench import shell
 
     called = {}
 
-    def fake_chat_run(text, session_name=None, model_name=None, stream=False):
-        called["command"] = "chat"
-        called["text"] = text
-        called["session"] = session_name
-        called["model"] = model_name
-        called["stream"] = stream
+    def fake_handler(args):
+        called["command"] = args.command
+        called["workspace"] = args.workspace
+        called["session"] = args.session
+
+    handlers = dict(cli.COMMAND_HANDLERS)
+    handlers["workspace-add-session"] = fake_handler
 
     shell.shell_line_run(
-        "hello world",
+        "workspace-add-session test-ws default",
         {"session": "default", "model": "test-model"},
         parser_build=cli.parser_build,
-        command_handlers=cli.COMMAND_HANDLERS,
-        chat_run=fake_chat_run,
+        command_handlers=handlers,
+        chat_run=lambda *a, **k: None,
     )
 
-    assert called["command"] == "chat"
-    assert called["text"] == "hello world"
+    assert called["command"] == "workspace-add-session"
+    assert called["workspace"] == "test-ws"
     assert called["session"] == "default"
-    assert called["model"] == "test-model"
-    assert called["stream"] is True

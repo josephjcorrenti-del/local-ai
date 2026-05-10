@@ -10,6 +10,7 @@ from ollama_workbench.config import CONFIG
 from ollama_workbench.log import log_event
 from ollama_workbench.output import fail, info, ok
 from ollama_workbench.runtime import ollama_chat, ollama_ensure_running
+from ollama_workbench.workspace import workspace_create, workspace_load
 
 SHELL_HELP = """
 Available commands:
@@ -96,6 +97,7 @@ def shell_line_run(
     if stripped == "banner":
         print("ollama_workbench shell")
         print(f"model: {state['model']}")
+        print(f"workspace: {state.get('workspace') or '(none)'}")
         print(f"session: {state['session']}")
         return
 
@@ -106,6 +108,26 @@ def shell_line_run(
     if stripped.startswith("session "):
         state["session"] = stripped.split(" ", 1)[1].strip()
         ok(f"Session set ({state['session']})")
+        return
+
+    if stripped.startswith("workspace "):
+        name = stripped.split(" ", 1)[1].strip()
+
+        # lazy create or validate
+        try:
+            workspace_load(name)
+        except Exception:
+            workspace_create(name)
+
+        state["workspace"] = name
+        ok(f"Workspace set ({name})")
+        return
+
+    if stripped == "workspace":
+        if state.get("workspace"):
+            print(f"workspace: {state['workspace']}")
+        else:
+            print("workspace: (none)")
         return
 
     if stripped in {"help", "?"}:
@@ -189,6 +211,7 @@ def shell_command_run(
     state = {
         "session": CONFIG.default_session_name,
         "model": model_name,
+        "workspace": None,
     }
 
     print("ollama_workbench shell")

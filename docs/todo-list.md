@@ -583,10 +583,10 @@ Commands (CLI-first)
 
 Shell integration
 [x] decide shell can select active workspace
-[ ] implement workspace NAME (create/select active workspace)
+[x] implement workspace NAME (create/select active workspace)
 [ ] link active session to workspace when workspace is active
 [ ] link active workspace to session when session is set
-[ ] show active workspace in shell banner
+[x] show active workspace in shell banner
 [x] keep workspace selection explicit
 [x] avoid automatic source loading from workspace in v1
 
@@ -609,8 +609,8 @@ Tests / smoke
 [x] add tests for session linking behavior
 [x] add tests for file/artifact linking
 [x] manual smoke test CLI workflow
-[ ] manual smoke test shell workspace selection fact links
-[ ] smoke test workspace flow
+[x] manual smoke test shell workspace selection
+[x] smoke test workspace flow
 
 v16.4 - user profile
 
