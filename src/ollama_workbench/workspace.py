@@ -123,3 +123,7 @@ def workspace_web_artifact_add(
         "web_artifact": artifact_path,
         "changed": changed,
     }
+
+
+def workspace_chat_sources_get(workspace_name: str) -> dict[str, Any]:
+    return workspace_load(workspace_name)

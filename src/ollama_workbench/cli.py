@@ -426,7 +426,6 @@ def web_chat_command_run(args: argparse.Namespace) -> None:
             CONFIG.web_chat_max_source_chars,
             question=args.question,
         )
-        source_windows.append((artifact, content_window))
 
     combined_parts: list[str] = []
     for i, (artifact, content_window) in enumerate(source_windows, 1):
@@ -689,6 +688,112 @@ def workspace_add_web_artifact_command_run(args: argparse.Namespace) -> None:
         )
 
 
+def workspace_chat_command_run(args: argparse.Namespace) -> None:
+    workspace = workspace_load(args.workspace)
+
+    session_names = workspace.get("sessions", [])
+    file_paths = workspace.get("files", [])
+    web_artifact_paths = workspace.get("web_artifacts", [])
+
+    source_parts = []
+    source_report = []
+
+    for session_name in session_names:
+        turns = session_turns_get(session_name)
+        included_turns = turns[-8:]
+        text = "\n".join(
+            f"{turn.get('role')}: {turn.get('content')}"
+            for turn in included_turns
+        )
+
+        source_parts.append(
+            f"[Session: {session_name}]\n{text}"
+        )
+        source_report.append(
+            f"session: {session_name} turns_included={len(included_turns)}"
+        )
+
+    for path in file_paths:
+        window = fs_content_window_get(
+            path,
+            args.question,
+            CONFIG.web_chat_max_source_chars,
+        )
+
+        source_parts.append(
+            f"[File: {window['path']}]\n"
+            f"Included chars: {window['included_chars']} "
+            f"of {window['total_chars']}\n\n"
+            f"{window['content_text']}"
+        )
+        source_report.append(
+            f"file: {window['path']} "
+            f"included_chars={window['included_chars']} "
+            f"of {window['total_chars']}"
+        )
+
+    for artifact_path in web_artifact_paths:
+        with open(artifact_path, "r", encoding="utf-8") as f:
+            artifact = json.load(f)
+
+        window = web_artifact_content_window_get(
+            artifact,
+            CONFIG.web_chat_max_source_chars,
+            question=args.question,
+        )
+
+        source_parts.append(
+            f"[Web artifact: {artifact_path}]\n"
+            f"URL: {artifact.get('url')}\n"
+            f"Title: {artifact.get('title') or '(none)'}\n"
+            f"Included chars: {window['included_chars']} "
+            f"of {window['total_chars']}\n\n"
+            f"{window['content_text']}"
+        )
+        source_report.append(
+            f"web_artifact: {artifact_path} "
+            f"included_chars={window['included_chars']} "
+            f"of {window['total_chars']}"
+        )
+
+    prompt = (
+        f"Workspace: {args.workspace}\n"
+        f"Question: {args.question}\n\n"
+        f"Sources:\n\n"
+        f"{chr(10).join(source_parts)}"
+    )
+
+    ollama_ensure_running()
+
+    payload = {
+        "model": CONFIG.chat_model_name,
+        "stream": False,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "Answer using only the provided workspace sources. "
+                    "If the sources do not contain enough information, say so."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
+    }
+
+    result = ollama_chat(payload)
+    answer = result["message"]["content"]
+
+    print(f"workspace: {args.workspace}")
+    print(f"question: {args.question}")
+    print()
+    print("sources:")
+    for source in source_report:
+        print(f"  {source}")
+    print()
+    print("answer:")
+    print(answer)
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -715,6 +820,7 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "workspace-add-session": workspace_add_session_command_run,
     "workspace-add-file": workspace_add_file_command_run,
     "workspace-add-web-artifact": workspace_add_web_artifact_command_run,
+    "workspace-chat": workspace_chat_command_run,
 }
 
 
@@ -904,6 +1010,13 @@ def parser_build() -> argparse.ArgumentParser:
     )
     p_ws_add_web_artifact.add_argument("workspace")
     p_ws_add_web_artifact.add_argument("artifact_path")
+
+    p_workspace_chat = subparsers.add_parser(
+        "workspace-chat",
+        help="Answer a question using explicit workspace references",
+    )
+    p_workspace_chat.add_argument("workspace")
+    p_workspace_chat.add_argument("question")
 
     return parser
 

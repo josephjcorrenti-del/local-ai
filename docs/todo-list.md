@@ -601,7 +601,17 @@ Workspace chat (future but defined)
 [x] define workspace-chat as explicit command
 [x] define use of existing bag-of-words / windowing for files
 [x] define output should show which sources were used
-[ ] implement workspace-chat (after core commands stabilize)
+[x] implement workspace-chat (after core commands stabilize)
+[x] implement workspace-chat <workspace> <question>
+[x] load workspace metadata
+[x] use linked files with content_window_get
+[x] use linked web artifacts with existing web artifact windowing
+[x] print sources used with included chars
+[x] do not auto-fetch web sources
+[x] do not auto-read anything outside workspace references
+[x] use linked sessions as needed context for workspace-chat
+[x] include bounded linked session history / summaries
+[x] print linked sessions used
 
 Tests / smoke
 [x] add tests for workspace create/list/show
@@ -658,6 +668,8 @@ to be prioritized (tbp)
 [ ] create a user profile
 [ ] AI should tell user where data lives.
 [ ] move shell logic out of cli
+[ ] improve workspace-chat prompt/source separation so stale session context cannot dominate unrelated questions
+[ ] workspace-chat should skip missing files/artifacts with warning
 
 
 File system
