@@ -9,6 +9,7 @@ from typing import Callable
 from ollama_workbench.config import CONFIG
 from ollama_workbench.log import log_event
 from ollama_workbench.output import fail, info, ok
+from ollama_workbench.profile import profile_load
 from ollama_workbench.runtime import ollama_chat, ollama_ensure_running
 from ollama_workbench.workspace import (
     workspace_create,
@@ -55,6 +56,14 @@ Shell:
   exit
   quit
 
+Profile:
+  profile-show
+  profile-enable [--profile KEY]
+  profile-disable [--profile KEY]
+  profile-set <human-readable-key> <value> [--profile KEY]
+  profile-clear <human-readable-key> [--profile KEY]
+  profile-delete
+
 Default:
   Any input that does not start with a known command is treated as:
     chat <input> using the active shell session
@@ -92,6 +101,12 @@ Workspace:
   workspace-add-file <workspace> <path>
   workspace-add-web-artifact <workspace> <artifact_path>
   workspace-chat <workspace> <question>
+
+  ollama-workbench shell
+    starts shell; auto-loads enabled default profile if present
+
+  ollama-workbench shell --profile joe
+    starts shell with named enabled profile
 """.strip()
 
 
@@ -111,6 +126,7 @@ def shell_line_run(
 
     if stripped == "banner":
         print("ollama_workbench shell")
+        print(f"profile: {state.get('profile') or '(none)'}")
         print(f"model: {state['model']}")
         print(f"workspace: {state.get('workspace') or '(none)'}")
         print(f"session: {state['session']}")
@@ -223,16 +239,27 @@ def shell_command_run(
     command_handlers: dict[str, Callable[[argparse.Namespace], None]],
     chat_run: Callable[..., None],
 ) -> None:
+    profile = _profile_for_shell_get(args.profile)
+
+    profile_values = profile.get("values", {}) if profile else {}
+
     model_name = CONFIG.small_model_name if args.small else CONFIG.chat_model_name
 
+    if not args.small and profile_values.get("preferred_model"):
+        model_name = str(profile_values["preferred_model"])
+
     state = {
-        "session": CONFIG.default_session_name,
+        "session": str(profile_values.get("preferred_session") or CONFIG.default_session_name),
         "model": model_name,
-        "workspace": None,
+        "workspace": profile_values.get("preferred_workspace"),
+        "profile": profile["profile_key"] if profile else None,
     }
 
     print("ollama_workbench shell")
+    if state.get("profile"):
+        print(f"profile: {state['profile']}")
     print(f"model: {state['model']}")
+    print(f"workspace: {state.get('workspace') or '(none)'}")
     print(f"session: {state['session']}")
     info("Warming model...")
     shell_warmup_run(state["model"])
@@ -293,3 +320,13 @@ def _prompt_get(state: dict[str, str]) -> str:
         return f"owb:{workspace_name}.{session_name}> "
 
     return f"owb:{session_name}> "
+
+
+def _profile_for_shell_get(profile_key: str | None) -> dict[str, object] | None:
+    """Load an enabled profile for shell startup, if available."""
+    profile = profile_load(profile_key)
+
+    if not profile.get("enabled"):
+        return None
+
+    return profile

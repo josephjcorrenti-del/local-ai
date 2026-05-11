@@ -1041,6 +1041,12 @@ def parser_build() -> argparse.ArgumentParser:
         help="Use small model for faster interactive shell responses",
     )
 
+    p_shell.add_argument(
+        "--profile",
+        default=None,
+        help="Profile key to load for shell startup",
+    )
+
     p_ws_create = subparsers.add_parser(
         "workspace-create",
         help="Create a workspace",

@@ -635,30 +635,32 @@ Concept
 [x] profile can be deleted easily
 
 Storage
-[ ] define profile storage location under app data root
-[ ] define profile file shape
-[ ] include enabled flag in profile state
-[ ] store display name only if useful
-[ ] store preferred default model only if needed
+[x] define profile storage location under app data root
+[x] define profile file shape
+[x] include enabled flag in profile state
+[x] store display name only if useful
+[x] store preferred default model only if needed
 [ ] store preferred default session/workspace only if needed
 [ ] store shell preferences only if needed
 
 Commands
-[ ] add profile-show
-[ ] add profile-enable
-[ ] add profile-disable
-[ ] add profile-set <human-readable-key> <value>
-[ ] add profile-clear <human-readable-key>
-[ ] add profile-delete
+[x] add profile-show
+[x] add profile-enable
+[x] add profile-disable
+[x] add profile-set <human-readable-key> <value>
+[x] add profile-clear <human-readable-key>
+[x] add profile-delete
 [ ] add profile-reset only if needed
 
 Shell integration
-[ ] auto-load default profile when default profile is enabled
-[ ] allow shell --profile <profile-key> to load a named profile
+[x] auto-load default profile when default profile is enabled
+[x] allow shell --profile <profile-key> to load a named profile
 [ ] allow shell --user <profile-key> as human-friendly alias only if useful
-[ ] load selected profile before model warm-up
-[ ] show active profile in shell banner when useful
-[ ] keep shell startup behavior unchanged when no enabled profile exists
+[x] load selected profile before model warm-up
+[x] show active profile in shell banner when useful
+[x] keep shell startup behavior unchanged when no enabled profile exists
+[x] apply preferred model from enabled profile only when present
+[x] apply preferred workspace/session only when explicitly defined
 
 Guardrails
 [x] no sensitive personal data by default
@@ -668,30 +670,27 @@ Guardrails
 [x] profile-delete removes stored profile data, not just disables it
 
 Tests / smoke
-[ ] add tests for profile read/write
-[ ] add tests for disabled profile behavior
-[ ] add tests for profile enable/disable
-[ ] add tests for profile delete
+[x] add tests for profile read/write
+[x] add tests for disabled profile behavior
+[x] add tests for profile enable/disable
+[x] add tests for profile delete
 [ ] add tests for CLI override behavior if defaults are added
-[ ] smoke test profile commands
+[x] smoke test profile commands
+[x] smoke test shell profile loading
 
 17 - Website 
 [ ] TBD
 
 to be prioritized (tbp)
 [ ] create a search engine like degoogle and load in local ai
-[ ] create a user profile
 [ ] AI should tell user where data lives.
-[ ] move shell logic out of cli
+[ ] CLI conversations should default to web searches.
 
 File system
 [ ] add parser/extraction layer for non-plain-text files, similar to web extraction
 [ ] add persistent file access mode only with explicit opt-in
 [ ] add persistent-read checkbox/setting for future UI
 [ ] decide how persistent file permissions are stored and revoked
-
-Other
-[ ] add a container for chats like project.
 
 Shell
 [ ] add shell command history
