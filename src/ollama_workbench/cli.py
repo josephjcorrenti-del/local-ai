@@ -46,6 +46,14 @@ from ollama_workbench.memory import (
 )
 from ollama_workbench.output import fail, info, ok, warn
 from ollama_workbench.paths import paths_get
+from ollama_workbench.profile import (
+    profile_clear,
+    profile_delete,
+    profile_disable,
+    profile_enable,
+    profile_load,
+    profile_set,
+)
 from ollama_workbench.runtime import (
     ai_status_show,
     ollama_chat,
@@ -794,6 +802,60 @@ def workspace_chat_command_run(args: argparse.Namespace) -> None:
     print(answer)
 
 
+def profile_show_command_run(args: argparse.Namespace) -> None:
+    profile = profile_load(args.profile)
+    print(json.dumps(profile, indent=2))
+
+
+def profile_enable_command_run(args: argparse.Namespace) -> None:
+    profile = profile_enable(args.profile)
+
+
+    ok(f"Profile enabled ({profile['profile_key']})")
+def profile_disable_command_run(args: argparse.Namespace) -> None:
+    profile = profile_disable(args.profile)
+
+
+    ok(f"Profile disabled ({profile['profile_key']})")
+def profile_delete_command_run(args: argparse.Namespace) -> None:
+    deleted = profile_delete()
+
+
+    if deleted:
+        ok("Profile deleted")
+    else:
+        info("Profile already absent")
+
+
+def profile_set_command_run(args: argparse.Namespace) -> None:
+    profile = profile_set(
+        args.key,
+        args.value,
+        profile_key=args.profile,
+    )
+
+
+    ok(
+        f"Profile value set "
+        f"({profile['profile_key']}) "
+        f"{args.key}={args.value}"
+    )
+
+
+def profile_clear_command_run(args: argparse.Namespace) -> None:
+    profile = profile_clear(
+        args.key,
+        profile_key=args.profile,
+    )
+
+
+    ok(
+        f"Profile value cleared "
+        f"({profile['profile_key']}) "
+        f"{args.key}"
+    )
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -821,6 +883,12 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "workspace-add-file": workspace_add_file_command_run,
     "workspace-add-web-artifact": workspace_add_web_artifact_command_run,
     "workspace-chat": workspace_chat_command_run,
+    "profile-show": profile_show_command_run,
+    "profile-enable": profile_enable_command_run,
+    "profile-disable": profile_disable_command_run,
+    "profile-delete": profile_delete_command_run,
+    "profile-set": profile_set_command_run,
+    "profile-clear": profile_clear_command_run,
 }
 
 
@@ -1017,6 +1085,45 @@ def parser_build() -> argparse.ArgumentParser:
     )
     p_workspace_chat.add_argument("workspace")
     p_workspace_chat.add_argument("question")
+
+    p_profile_show = subparsers.add_parser(
+        "profile-show",
+        help="Show stored profile",
+    )
+
+    p_profile_show.add_argument("--profile", default=None)
+    p_profile_enable = subparsers.add_parser(
+        "profile-enable",
+        help="Enable a profile",
+    )
+
+    p_profile_enable.add_argument("--profile", default=None)
+    p_profile_disable = subparsers.add_parser(
+        "profile-disable",
+        help="Disable a profile",
+    )
+
+    p_profile_disable.add_argument("--profile", default=None)
+    p_profile_delete = subparsers.add_parser(
+        "profile-delete",
+        help="Delete stored profile",
+    )
+
+    p_profile_set = subparsers.add_parser(
+        "profile-set",
+        help="Set a profile value",
+    )
+
+    p_profile_set.add_argument("key")
+    p_profile_set.add_argument("value")
+    p_profile_set.add_argument("--profile", default=None)
+    p_profile_clear = subparsers.add_parser(
+        "profile-clear",
+        help="Clear a profile value",
+    )
+
+    p_profile_clear.add_argument("key")
+    p_profile_clear.add_argument("--profile", default=None)
 
     return parser
 

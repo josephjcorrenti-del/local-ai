@@ -625,14 +625,19 @@ Tests / smoke
 v16.4 - user profile
 
 Concept
-[ ] define user profile purpose
-[ ] decide what belongs in profile vs config
-[ ] keep profile explicit and inspectable
-[ ] avoid hidden personalization behavior
+[x] define user profile purpose
+[x] decide what belongs in profile vs config
+[x] keep profile explicit and inspectable
+[x] avoid hidden personalization behavior
+[x] profile persistence starts disabled by default
+[x] profile can be enabled explicitly
+[x] profile can be disabled easily
+[x] profile can be deleted easily
 
 Storage
 [ ] define profile storage location under app data root
 [ ] define profile file shape
+[ ] include enabled flag in profile state
 [ ] store display name only if useful
 [ ] store preferred default model only if needed
 [ ] store preferred default session/workspace only if needed
@@ -640,23 +645,33 @@ Storage
 
 Commands
 [ ] add profile-show
-[ ] add profile-set <key> <value>
-[ ] add profile-clear <key>
+[ ] add profile-enable
+[ ] add profile-disable
+[ ] add profile-set <human-readable-key> <value>
+[ ] add profile-clear <human-readable-key>
+[ ] add profile-delete
 [ ] add profile-reset only if needed
 
 Shell integration
-[ ] show profile info in shell banner only if useful
-[ ] use profile defaults only when explicit and documented
-[ ] allow CLI flags to override profile defaults
+[ ] auto-load default profile when default profile is enabled
+[ ] allow shell --profile <profile-key> to load a named profile
+[ ] allow shell --user <profile-key> as human-friendly alias only if useful
+[ ] load selected profile before model warm-up
+[ ] show active profile in shell banner when useful
+[ ] keep shell startup behavior unchanged when no enabled profile exists
 
 Guardrails
-[ ] no sensitive personal data by default
-[ ] no hidden behavior based on profile
-[ ] no automatic memory injection from profile
-[ ] keep profile separate from chat/session memory
+[x] no sensitive personal data by default
+[x] no hidden behavior based on profile
+[x] no automatic memory injection from profile
+[x] keep profile separate from chat/session memory
+[x] profile-delete removes stored profile data, not just disables it
 
 Tests / smoke
 [ ] add tests for profile read/write
+[ ] add tests for disabled profile behavior
+[ ] add tests for profile enable/disable
+[ ] add tests for profile delete
 [ ] add tests for CLI override behavior if defaults are added
 [ ] smoke test profile commands
 
@@ -668,9 +683,6 @@ to be prioritized (tbp)
 [ ] create a user profile
 [ ] AI should tell user where data lives.
 [ ] move shell logic out of cli
-[ ] improve workspace-chat prompt/source separation so stale session context cannot dominate unrelated questions
-[ ] workspace-chat should skip missing files/artifacts with warning
-
 
 File system
 [ ] add parser/extraction layer for non-plain-text files, similar to web extraction
@@ -688,8 +700,21 @@ Shell
 [ ] add shell session/context awareness
 [ ] add shell-specific formatting/presentation only if needed
 
+Workspace chat polish
+[ ] improve workspace-chat prompt/source separation so stale session context cannot dominate unrelated questions
+[ ] workspace-chat should skip missing files/artifacts with warning
+[x] add tests for workspace-chat source construction
+[ ] verify workspace-chat does not fetch web sources
+[ ] consider source weighting/order for sessions vs files vs web artifacts
+[ ] consider workspace remove/unlink commands after add/show remains stable
+
 Tests / smoke
 [ ] test default-to-chat routing
 [ ] test explicit command routing
 [ ] test help command does not call CLI handlers
 [ ] manual smoke test interactive flow
+
+Refactor
+[ ] make sure .pys are grouped in a way that makes sense
+[ ] make sure paths are being used
+[ ] docs strings are used

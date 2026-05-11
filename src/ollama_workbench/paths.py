@@ -41,6 +41,7 @@ class AppPaths:
     web_dir: Path
     logs_dir: Path
     run_log_path: Path
+    profile_path: Path
 
 
 # WHY:
@@ -66,6 +67,7 @@ def paths_get() -> AppPaths:
     web_dir = app_data_root / "web"
     logs_dir = app_data_root / "logs"
     run_log_path = logs_dir / "run.log"
+    profile_path = app_data_root / "profile.json"
 
     return AppPaths(
         repo_root=repo_root,
@@ -81,4 +83,5 @@ def paths_get() -> AppPaths:
         web_dir=web_dir,
         logs_dir=logs_dir,
         run_log_path=run_log_path,
+        profile_path=profile_path,
     )
