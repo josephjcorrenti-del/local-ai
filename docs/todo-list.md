@@ -756,22 +756,22 @@ Tests / smoke
     - user-facing command: local-ai
     - Python package: local_ai
     - project identity: local_ai
-    - old name: local_ai legacy/compatibility only
+    - old name: ollama_workbench legacy/compatibility only
 
 [x] perform rename in two phases
 
 [x] phase 1: compatibility bridge
     - add local-ai console script
-    - keep local-ai console script as alias
+    - keep ollama-workbench console script as alias
     - keep existing package path temporarily
     - update docs to prefer local-ai
-    - add deprecation note for local-ai
+    - add deprecation note for ollama_workbench
     - do not move data root yet
     - do not rename log path yet
     - do not break ELK dashboards yet
 
 [x] phase 2: internal project rename
-    - rename src/local_ai to src/local_ai
+    - rename src/ollama_workbench to src/local_ai
     - update all imports
     - update tests
     - update pyproject package discovery
@@ -782,7 +782,7 @@ Tests / smoke
     - remove generated egg-info/cache artifacts from repo if tracked
 
 [x] decide data migration strategy
-    - old data root: ~/ai/data/local_ai
+    - old data root: ~/ai/data/ollama_workbench
     - new data root: ~/ai/data/local_ai
     - prefer explicit migration command, not silent move
     - support reading old location during transition if needed
@@ -805,7 +805,7 @@ Tests / smoke
 [x] document rename decision in decisions.md
     - local_ai is the long-term project name
     - local-ai is the CLI command
-    - local_ai is legacy naming
+    - ollama_workbench is legacy naming
     - migration must be explicit and inspectable
 
 17 - Website 
