@@ -752,15 +752,15 @@ Tests / smoke
 
 ### Rename project to local_ai
 
-[ ] define rename end state
+[x] define rename end state
     - user-facing command: local-ai
     - Python package: local_ai
     - project identity: local_ai
     - old name: local_ai legacy/compatibility only
 
-[ ] perform rename in two phases
+[x] perform rename in two phases
 
-[ ] phase 1: compatibility bridge
+[x] phase 1: compatibility bridge
     - add local-ai console script
     - keep local-ai console script as alias
     - keep existing package path temporarily
@@ -770,7 +770,7 @@ Tests / smoke
     - do not rename log path yet
     - do not break ELK dashboards yet
 
-[ ] phase 2: internal project rename
+[x] phase 2: internal project rename
     - rename src/local_ai to src/local_ai
     - update all imports
     - update tests
@@ -781,28 +781,28 @@ Tests / smoke
     - update User-Agent strings
     - remove generated egg-info/cache artifacts from repo if tracked
 
-[ ] decide data migration strategy
+[x] decide data migration strategy
     - old data root: ~/ai/data/local_ai
     - new data root: ~/ai/data/local_ai
     - prefer explicit migration command, not silent move
     - support reading old location during transition if needed
     - document rollback behavior
 
-[ ] decide logging compatibility strategy
+[x] decide logging compatibility strategy
     - app_name eventually becomes local_ai
     - run.log path eventually becomes ~/ai/data/local_ai/logs/run.log
     - preserve event names unless behavior changes
     - document ELK dashboard/filter impact
     - avoid surprise event.dataset breakage
 
-[ ] add compatibility tests
+[x] add compatibility tests
     - local-ai status works
     - local-ai status still works during phase 1
     - python -m local_ai.cli works after phase 2
     - old command emits optional deprecation message only if acceptable
     - existing data remains readable
 
-[ ] document rename decision in decisions.md
+[x] document rename decision in decisions.md
     - local_ai is the long-term project name
     - local-ai is the CLI command
     - local_ai is legacy naming
