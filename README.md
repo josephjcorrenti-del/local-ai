@@ -1,4 +1,4 @@
-# ollama_workbench
+# local_ai
 
 Local Ollama-first CLI workbench.
 
@@ -26,6 +26,6 @@ Design goals:
 From repo root:
 
 ```bash
-PYTHONPATH=src python3 -m ollama_workbench.cli sessions
-PYTHONPATH=src python3 -m ollama_workbench.cli stats
-PYTHONPATH=src python3 -m ollama_workbench.cli chat "hello" --session scratch
+PYTHONPATH=src python3 -m local_ai.cli sessions
+PYTHONPATH=src python3 -m local_ai.cli stats
+PYTHONPATH=src python3 -m local_ai.cli chat "hello" --session scratch

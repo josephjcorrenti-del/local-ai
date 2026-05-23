@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 run_owb() {
-  PYTHONPATH="$REPO_ROOT/src" python3 -m ollama_workbench.cli "$@"
+  PYTHONPATH="$REPO_ROOT/src" python3 -m local_ai.cli "$@"
 }
 
 echo "=== doctor (normal data) ==="

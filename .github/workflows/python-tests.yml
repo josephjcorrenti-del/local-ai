@@ -30,4 +30,4 @@ jobs:
         run: .venv/bin/python -m pip install pytest
 
       - name: Run Python tests
-        run: PYTHONPATH=src .venv/bin/python -m pytest -q src/ollama_workbench/test
+        run: PYTHONPATH=src .venv/bin/python -m pytest -q src/local_ai/test

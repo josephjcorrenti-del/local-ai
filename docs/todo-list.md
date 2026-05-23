@@ -3,19 +3,19 @@ todo
 v2 phase 1 - cleanup + repo setup
 
 done
-[x] create proper package layout under src/ollama_workbench
+[x] create proper package layout under src/local_ai
 [x] move current python files into package directory
 [x] update imports to package-safe imports
 [x] add/update .gitignore
 [x] fill in pyproject.toml
-[x] rename any remaining hermes references to ollama_workbench
+[x] rename any remaining hermes references to local_ai
 [x] verify current commands still work after package cleanup
 
 completed work not yet reflected in checklist
 [x] add paths.py
 [x] split config-owned roots from derived filesystem paths
 [x] centralize session path resolution
-[x] set runtime session path to ~/ai/data/ollama_workbench/sessions
+[x] set runtime session path to ~/ai/data/local_ai/sessions
 [x] verify sessions are being written to shared ai data path
 
 next up - easy / structural
@@ -37,7 +37,7 @@ next up - project docs
 
 finish phase 1
 [x] initialize git cleanly
-[x] create first commit for ollama_workbench v2 phase 1
+[x] create first commit for local_ai v2 phase 1
 [x] push to github
 
 v2 phase 2 - session format baseline
@@ -45,7 +45,7 @@ v2 phase 2 - session format baseline
 done earlier
 [x] centralize path handling
 [x] set repo root separate from runtime data root
-[x] set default runtime data root to ~/ai/data/ollama_workbench
+[x] set default runtime data root to ~/ai/data/local_ai
 
 current phase
 [x] define session file object format
@@ -201,29 +201,29 @@ phase 2b - multi-source web-chat
 
 v8 - observability / ELK
 
-v8 phase 1 - ollama_workbench ELK integration
-[x] add explicit app log path under ~/ai/data/ollama_workbench/logs/run.log
+v8 phase 1 - local_ai ELK integration
+[x] add explicit app log path under ~/ai/data/local_ai/logs/run.log
 [x] extend log_event to write the same NDJSON payload to stdout and run.log
 [x] keep logging behavior explicit and inspectable (no background logger setup)
 [x] verify log directory/file creation behavior is simple and local
 
 v8 phase 2 - filebeat wiring
-[x] add docker volume mount for ollama_workbench run.log into filebeat container
-[x] add filebeat filestream input for ollama_workbench run.log
-[x] assign service.name=ollama-workbench
-[x] assign event.dataset=ollama-workbench.runlog
+[x] add docker volume mount for local_ai run.log into filebeat container
+[x] add filebeat filestream input for local_ai run.log
+[x] assign service.name=local-ai
+[x] assign event.dataset=local-ai.runlog
 [x] keep existing openvpn/python-lab ingestion unchanged
 
 v8 phase 3 - field mapping / Kibana shape
-[x] map ollama_workbench fields into Kibana-friendly columns
+[x] map local_ai fields into Kibana-friendly columns
 [x] keep/service mirror columns where useful: service.name, event.dataset, log.level, log.logger, log.origin.function, log.origin.file.name, labels.run_id, event.action, message
-[ ] decide which existing ollama_workbench fields stay first-class: command, session, model, path, url, error
+[ ] decide which existing local_ai fields stay first-class: command, session, model, path, url, error
 [x] verify fields are searchable and aggregatable in Discover
 
 v8 phase 4 - verification
 [x] run explicit CLI smoke commands and verify ingestion in Elasticsearch
-[x] verify Discover filters for event.dataset:"ollama-workbench.runlog"
-[x] define initial Discover column layout for ollama_workbench
+[x] verify Discover filters for event.dataset:"local-ai.runlog"
+[x] define initial Discover column layout for local_ai
 [ ] refine saved Discover views per service / use case
 [ ] add sample KQL queries for common operator views
 
@@ -260,11 +260,11 @@ phase 3 - kibana verification
 v9 - integration and platform decisions
 
 v9 phase 1 - integration boundary
-[ ] decide later how ollama_workbench may integrate with manumental-effort
+[ ] decide later how local_ai may integrate with manumental-effort
 [ ] keep integration at boundary, not shared mess
 
 v9 phase 2 - containers
-[ ] containerize ollama_workbench
+[ ] containerize local_ai
 [ ] make helper script handling container-friendly
 
 v10 - output modes and CLI readability
@@ -301,7 +301,7 @@ v10 phase 5 - CLI output consistency review
 v11 - gui exploration
 
 v11 phase 1 - starting a GUI
-[ ] start a GUI for ollama_workbench
+[ ] start a GUI for local_ai
 [ ] decide whether the first GUI should be web-based
 [ ] keep GUI optional and separate from core CLI flow
 
@@ -756,22 +756,22 @@ Tests / smoke
     - user-facing command: local-ai
     - Python package: local_ai
     - project identity: local_ai
-    - old name: ollama_workbench legacy/compatibility only
+    - old name: local_ai legacy/compatibility only
 
 [ ] perform rename in two phases
 
 [ ] phase 1: compatibility bridge
     - add local-ai console script
-    - keep ollama-workbench console script as alias
+    - keep local-ai console script as alias
     - keep existing package path temporarily
     - update docs to prefer local-ai
-    - add deprecation note for ollama-workbench
+    - add deprecation note for local-ai
     - do not move data root yet
     - do not rename log path yet
     - do not break ELK dashboards yet
 
 [ ] phase 2: internal project rename
-    - rename src/ollama_workbench to src/local_ai
+    - rename src/local_ai to src/local_ai
     - update all imports
     - update tests
     - update pyproject package discovery
@@ -782,7 +782,7 @@ Tests / smoke
     - remove generated egg-info/cache artifacts from repo if tracked
 
 [ ] decide data migration strategy
-    - old data root: ~/ai/data/ollama_workbench
+    - old data root: ~/ai/data/local_ai
     - new data root: ~/ai/data/local_ai
     - prefer explicit migration command, not silent move
     - support reading old location during transition if needed
@@ -797,7 +797,7 @@ Tests / smoke
 
 [ ] add compatibility tests
     - local-ai status works
-    - ollama-workbench status still works during phase 1
+    - local-ai status still works during phase 1
     - python -m local_ai.cli works after phase 2
     - old command emits optional deprecation message only if acceptable
     - existing data remains readable
@@ -805,7 +805,7 @@ Tests / smoke
 [ ] document rename decision in decisions.md
     - local_ai is the long-term project name
     - local-ai is the CLI command
-    - ollama_workbench is legacy naming
+    - local_ai is legacy naming
     - migration must be explicit and inspectable
 
 17 - Website 

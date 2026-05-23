@@ -1,10 +1,10 @@
-# ollama_workbench decisions
+# local_ai decisions
 
 ## Naming
 
-- Project name is `ollama_workbench`.
+- Project name is `local_ai`.
 - The old `hermes_lab` / `hermes` naming has been retired.
-- Package imports should use `from ollama_workbench...`.
+- Package imports should use `from local_ai...`.
 - Prefer model naming that separates size/capability from usage role.
 - Current baseline model tiers are:
   - `lightweight_model_name`
@@ -13,7 +13,7 @@
 
 ## Project shape
 
-- Keep code under `src/ollama_workbench/`.
+- Keep code under `src/local_ai/`.
 - Keep the repo standalone, separate from `manumental-effort`.
 - Keep the project CLI-first for now.
 - Do not add web UI / TUI / service layers unless there is a concrete reason.
@@ -23,9 +23,9 @@
 - Ollama is the local runtime.
 - Models must remain swappable.
 - Runtime/session data lives outside the repo under:
-  `~/ai/data/ollama_workbench/`
+  `~/ai/data/local_ai/`
 - Current session path:
-  `~/ai/data/ollama_workbench/sessions/`
+  `~/ai/data/local_ai/sessions/`
 
 ### Model behavior
 
@@ -72,20 +72,20 @@
 
 ## Observability / ELK
 
-- `ollama_workbench` logs should remain explicit, local, and inspectable.
+- `local_ai` logs should remain explicit, local, and inspectable.
 - Structured app logs should be emitted as NDJSON.
 - `log.py` remains the single logging entrypoint.
 - Logging should stay stdout-visible for CLI traceability.
 - The same structured event payload may also be written to a local run log for Filebeat ingestion.
 - The initial runtime log path is:
-  `~/ai/data/ollama_workbench/logs/run.log`
+  `~/ai/data/local_ai/logs/run.log`
 - ELK ingestion should mirror the existing local pattern:
   app -> NDJSON file -> Filebeat -> Elasticsearch -> Kibana
 - Initial ELK identity fields for this app should be:
-  - `service.name = ollama-workbench`
-  - `event.dataset = ollama-workbench.runlog`
+  - `service.name = local-ai`
+  - `event.dataset = local-ai.runlog`
 - Prefer simple field mirroring and explicit mappings over introducing a fuller logging framework.
-- Do not break or redesign existing OpenVPN or python-lab ingestion to add `ollama_workbench`.
+- Do not break or redesign existing OpenVPN or python-lab ingestion to add `local_ai`.
 
 ## CLI output model
 
@@ -201,7 +201,7 @@ Commands should fall into one of the following categories:
 
 - Current web search uses DuckDuckGo as the only implemented provider.
 - Do not add search-engine configuration while there is only one provider.
-- The preferred long-term direction is a locally hosted search service/API that `ollama_workbench` can call explicitly.
+- The preferred long-term direction is a locally hosted search service/API that `local_ai` can call explicitly.
 - A provider abstraction should be introduced only after a second provider exists, preferably the local search provider.
 
 ### Summarize behavior

@@ -3,14 +3,15 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ollama-workbench"
+name = "local-ai"
 version = "0.2.0"
 description = "Local Ollama-first CLI workbench"
 readme = "README.md"
 requires-python = ">=3.12"
 
 [project.scripts]
-ollama-workbench = "ollama_workbench.cli:main"
+local-ai = "local_ai.cli:main"
+ollama-workbench = "local_ai.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

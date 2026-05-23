@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-FIXTURE_ROOT="$HOME/ai/test_data/ollama_workbench"
+FIXTURE_ROOT="$HOME/ai/test_data/local_ai"
 SESSIONS_DIR="$FIXTURE_ROOT/sessions"
 
 echo "=== fixture directory ==="
@@ -37,7 +37,7 @@ if python3 - << 'PY'
 import json
 from pathlib import Path
 
-path = Path.home() / "ai" / "test_data" / "ollama_workbench" / "sessions" / "malformed_bad_session.json"
+path = Path.home() / "ai" / "test_data" / "local_ai" / "sessions" / "malformed_bad_session.json"
 
 try:
     json.loads(path.read_text(encoding="utf-8"))

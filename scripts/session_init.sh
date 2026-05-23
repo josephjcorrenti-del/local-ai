@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== ollama_workbench init ==="
+echo "=== local_ai init ==="
 
 if [ ! -d ".venv" ]; then
   echo "[*] creating virtual environment"
@@ -20,9 +20,9 @@ python -m pip install --upgrade pip
 echo "[*] installing project (editable)"
 python -m pip install -e .
 
-echo "[✓] ready: use 'ollama-workbench'"
+echo "[✓] ready: use 'local-ai'"
 
-if command -v ollama-workbench >/dev/null 2>&1; then
+if command -v local-ai >/dev/null 2>&1; then
   echo "[✓] CLI available"
 else
   echo "[!] CLI not found"
