@@ -496,8 +496,6 @@ Logging / tests
 
 v16 outside interfaces
 
-v16 outside interfaces
-
 v16.1 - shell MVP
 
 [x] add shell command to CLI
@@ -677,6 +675,138 @@ Tests / smoke
 [ ] add tests for CLI override behavior if defaults are added
 [x] smoke test profile commands
 [x] smoke test shell profile loading
+
+## post-v16.5 stabilization before integration
+
+### Pre-rename safety check
+
+[ ] confirm rename will not silently migrate data
+[ ] confirm old data root remains untouched unless explicit migration is added
+[ ] confirm old command compatibility behavior is intentional
+[ ] confirm logging changes are documented before app/log path changes
+[ ] confirm no profile/workspace/session behavior changes are bundled into rename
+
+### Security
+
+[ ] review all persistence surfaces
+    - profiles
+    - sessions
+    - workspace paths
+    - file reads
+    - web artifacts
+    - logs
+
+[ ] verify profile values are explicit and non-executing
+    - model is data only
+    - session is data only
+    - workspace is data only
+    - no shell/profile command execution
+
+[ ] validate workspace/profile path handling
+    - reject unsafe paths where appropriate
+    - normalize paths before use
+    - preserve bounded reads only
+    - avoid following persistence into implicit context injection
+
+[ ] review logging for sensitive data exposure
+    - profile names
+    - file paths
+    - prompts
+    - URLs
+    - errors/tracebacks
+
+[ ] confirm no hidden automation was introduced
+    - shell startup
+    - profile auto-load
+    - workspace loading
+    - future retrieval hooks
+
+[ ] document security boundaries in decisions.md
+    - profiles are preferences, not memory
+    - profile loading does not imply file/search/context loading
+    - local_search integration must remain explicit
+
+
+### Cleanup
+
+[ ] review docs/todo-list.md for completed v16.4 items
+[ ] move completed items out of active phase or mark done
+[ ] add a new stabilization section before integration
+[ ] review docs/decisions.md for profile decisions
+[ ] ensure CLI command help is consistent
+[ ] ensure shell command help is consistent
+[ ] check naming consistency across:
+    - cli.py
+    - shell.py
+    - profile module
+    - docs
+    - tests
+    - README if applicable
+
+[ ] remove dead code from profile implementation
+[ ] remove unused imports
+[ ] remove stale comments from previous shell/profile drafts
+[ ] verify tests still describe intended behavior
+[ ] add/adjust tests only where behavior is already agreed
+
+
+### Rename project to local_ai
+
+[ ] define rename end state
+    - user-facing command: local-ai
+    - Python package: local_ai
+    - project identity: local_ai
+    - old name: ollama_workbench legacy/compatibility only
+
+[ ] perform rename in two phases
+
+[ ] phase 1: compatibility bridge
+    - add local-ai console script
+    - keep ollama-workbench console script as alias
+    - keep existing package path temporarily
+    - update docs to prefer local-ai
+    - add deprecation note for ollama-workbench
+    - do not move data root yet
+    - do not rename log path yet
+    - do not break ELK dashboards yet
+
+[ ] phase 2: internal project rename
+    - rename src/ollama_workbench to src/local_ai
+    - update all imports
+    - update tests
+    - update pyproject package discovery
+    - update scripts/tests
+    - update README/docs/cheatsheet
+    - update shell banner/help text
+    - update User-Agent strings
+    - remove generated egg-info/cache artifacts from repo if tracked
+
+[ ] decide data migration strategy
+    - old data root: ~/ai/data/ollama_workbench
+    - new data root: ~/ai/data/local_ai
+    - prefer explicit migration command, not silent move
+    - support reading old location during transition if needed
+    - document rollback behavior
+
+[ ] decide logging compatibility strategy
+    - app_name eventually becomes local_ai
+    - run.log path eventually becomes ~/ai/data/local_ai/logs/run.log
+    - preserve event names unless behavior changes
+    - document ELK dashboard/filter impact
+    - avoid surprise event.dataset breakage
+
+[ ] add compatibility tests
+    - local-ai status works
+    - ollama-workbench status still works during phase 1
+    - python -m local_ai.cli works after phase 2
+    - old command emits optional deprecation message only if acceptable
+    - existing data remains readable
+
+[ ] document rename decision in decisions.md
+    - local_ai is the long-term project name
+    - local-ai is the CLI command
+    - ollama_workbench is legacy naming
+    - migration must be explicit and inspectable
 
 17 - Website 
 [ ] TBD
