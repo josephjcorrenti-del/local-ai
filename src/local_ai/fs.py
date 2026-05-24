@@ -154,3 +154,7 @@ def fs_content_window_get(
             error_type=type(exc).__name__,
         )
         raise
+
+
+def path_resolve_user_input(path: str) -> Path:
+    return Path(path).expanduser().resolve()

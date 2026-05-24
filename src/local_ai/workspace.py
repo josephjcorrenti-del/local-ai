@@ -35,7 +35,8 @@ def _workspace_dir_get() -> Path:
 
 
 def _workspace_path_get(name: str) -> Path:
-    return _workspace_dir_get() / f"{name}.json"
+    safe_name = workspace_name_validate(name)
+    return _workspace_dir_get() / f"{safe_name}.json"
 
 
 def _now_iso() -> str:
@@ -127,3 +128,15 @@ def workspace_web_artifact_add(
 
 def workspace_chat_sources_get(workspace_name: str) -> dict[str, Any]:
     return workspace_load(workspace_name)
+
+
+def workspace_name_validate(name: str) -> str:
+    value = name.strip()
+
+    if not value:
+        raise ValueError("workspace name cannot be empty")
+
+    if "/" in value or "\\" in value or ".." in value:
+        raise ValueError("invalid workspace name")
+
+    return value

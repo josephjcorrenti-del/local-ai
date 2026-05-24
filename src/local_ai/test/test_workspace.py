@@ -80,3 +80,36 @@ def test_prompt_get_without_workspace():
     )
 
     assert prompt == "owb:default> "
+
+
+def test_workspace_rejects_empty_name(tmp_path, monkeypatch):
+    from local_ai import workspace
+
+    class FakePaths:
+        app_data_root = tmp_path
+
+    monkeypatch.setattr(workspace, "paths_get", lambda: FakePaths())
+
+    try:
+        workspace.workspace_create("")
+        assert False, "expected workspace_create to reject empty name"
+    except ValueError as exc:
+        assert "workspace name cannot be empty" in str(exc)
+
+
+def test_workspace_rejects_path_like_names(tmp_path, monkeypatch):
+    from local_ai import workspace
+
+    class FakePaths:
+        app_data_root = tmp_path
+
+    monkeypatch.setattr(workspace, "paths_get", lambda: FakePaths())
+
+    bad_names = ["../evil", "a/b", r"a\b", "safe..ish"]
+
+    for name in bad_names:
+        try:
+            workspace.workspace_create(name)
+            assert False, f"expected workspace_create to reject {name}"
+        except ValueError as exc:
+            assert "invalid workspace name" in str(exc)

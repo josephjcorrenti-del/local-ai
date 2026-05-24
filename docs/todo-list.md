@@ -680,15 +680,15 @@ Tests / smoke
 
 ### Pre-rename safety check
 
-[ ] confirm rename will not silently migrate data
-[ ] confirm old data root remains untouched unless explicit migration is added
-[ ] confirm old command compatibility behavior is intentional
-[ ] confirm logging changes are documented before app/log path changes
-[ ] confirm no profile/workspace/session behavior changes are bundled into rename
+[x] confirm rename will not silently migrate data
+[x] confirm old data root remains untouched unless explicit migration is added
+[x] confirm old command compatibility behavior is intentional
+[x] confirm logging changes are documented before app/log path changes
+[x] confirm no profile/workspace/session behavior changes are bundled into rename
 
 ### Security
 
-[ ] review all persistence surfaces
+[x] review all persistence surfaces
     - profiles
     - sessions
     - workspace paths
@@ -696,13 +696,13 @@ Tests / smoke
     - web artifacts
     - logs
 
-[ ] verify profile values are explicit and non-executing
+[x] verify profile values are explicit and non-executing
     - model is data only
     - session is data only
     - workspace is data only
     - no shell/profile command execution
 
-[ ] validate workspace/profile path handling
+[x] validate workspace/profile path handling
     - reject unsafe paths where appropriate
     - normalize paths before use
     - preserve bounded reads only
@@ -715,13 +715,13 @@ Tests / smoke
     - URLs
     - errors/tracebacks
 
-[ ] confirm no hidden automation was introduced
+[x] confirm no hidden automation was introduced
     - shell startup
     - profile auto-load
     - workspace loading
     - future retrieval hooks
 
-[ ] document security boundaries in decisions.md
+[x] document security boundaries in decisions.md
     - profiles are preferences, not memory
     - profile loading does not imply file/search/context loading
     - local_search integration must remain explicit
