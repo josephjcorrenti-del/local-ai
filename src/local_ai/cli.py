@@ -856,6 +856,21 @@ def profile_clear_command_run(args: argparse.Namespace) -> None:
     )
 
 
+def argv_normalize(argv: list[str]) -> list[str]:
+    if not argv:
+        return argv
+
+    first = argv[0]
+
+    if first.startswith("-"):
+        return argv
+
+    if first in COMMAND_HANDLERS:
+        return argv
+
+    return ["chat", " ".join(argv)]
+
+
 COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
     "prompt": prompt_command_run,
     "json": json_command_run,
@@ -1141,7 +1156,9 @@ def parser_build() -> argparse.ArgumentParser:
 def main() -> None:
     """Parse arguments, dispatch the command, and handle top-level logging."""
     parser = parser_build()
-    args = parser.parse_args()
+    #args = parser.parse_args()
+    argv = argv_normalize(sys.argv[1:])
+    args = parser.parse_args(argv)
 
     os.environ["OWB_DATA_DIR"] = args.data_dir
 
