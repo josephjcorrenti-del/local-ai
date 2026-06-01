@@ -76,6 +76,16 @@ def _params_build(
     return params
 
 
+def path_display(path: str | Path) -> str:
+    value = str(Path(path).expanduser())
+
+    home = str(Path.home())
+
+    if value.startswith(home):
+        return value.replace(home, "~", 1)
+
+    return value
+
 def log_event(
     event: str,
     *,
@@ -111,7 +121,7 @@ def log_event(
         command=command,
         session=session,
         model=model,
-        path=path,
+        path=path_display(path) if path else None,
         url=url,
         error=error,
     )

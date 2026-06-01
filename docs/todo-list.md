@@ -708,7 +708,7 @@ Tests / smoke
     - preserve bounded reads only
     - avoid following persistence into implicit context injection
 
-[ ] review logging for sensitive data exposure
+[x] review logging for sensitive data exposure
     - profile names
     - file paths
     - prompts
