@@ -318,3 +318,27 @@ Commands should fall into one of the following categories:
 - `workspace-chat` should use existing bounded relevance selection, such as bag-of-words/content-window logic, for linked files and artifacts.
 - If workspace files are referenced by a workspace-aware chat command, they should be considered through bounded relevant windows, not silently ignored.
 - Workspace chat output should show which reference points were used.
+
+## Security and persistence boundaries
+
+- `local_ai` is a local-first CLI tool.
+- Persistence must remain explicit, inspectable, and file-backed.
+- Profiles are preferences, not memory.
+- Profile loading must not inject chat history, files, web artifacts, or search results into prompts.
+- Profile values are inert data only.
+- Workspaces are reference containers, not automatic context loaders.
+- Workspace loading must not read linked files.
+- Workspace loading must not fetch linked web artifacts.
+- Workspace context may be used only through explicit workspace-aware commands.
+- Session files are chat history, not profile data.
+- File reads must remain explicit operator actions.
+- File reads must be bounded before content enters model prompts.
+- Web access must remain explicit and opt-in.
+- Web artifacts are immutable snapshots once fetched.
+- Structured logs are operational telemetry, not conversation archives.
+- Structured logs must not include full prompt bodies or model responses by default.
+- Structured logs may include command names, model names, URLs, and displayed paths for traceability.
+- Home-directory paths in structured logs should be shortened to `~` when practical.
+- Debug tracebacks are opt-in through `--debug`.
+- Future `local_search` integration must remain explicit and inspectable.
+- Retrieval results must enter prompts through bounded evidence windows, not hidden background context.
