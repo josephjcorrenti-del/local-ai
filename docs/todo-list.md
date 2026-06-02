@@ -729,10 +729,10 @@ Tests / smoke
 
 ### Cleanup
 
-[ ] review docs/todo-list.md for completed v16.4 items
-[ ] move completed items out of active phase or mark done
-[ ] add a new stabilization section before integration
-[ ] review docs/decisions.md for profile decisions
+[x] review docs/todo-list.md for completed v16.4 items
+[x] move completed items out of active phase or mark done
+[x] add a new stabilization section before integration
+[x] review docs/decisions.md for profile decisions
 [x] ensure CLI command help is consistent
 [x] ensure shell command help is consistent
 [x] check naming consistency across:
