@@ -733,8 +733,8 @@ Tests / smoke
 [ ] move completed items out of active phase or mark done
 [ ] add a new stabilization section before integration
 [ ] review docs/decisions.md for profile decisions
-[ ] ensure CLI command help is consistent
-[ ] ensure shell command help is consistent
+[x] ensure CLI command help is consistent
+[x] ensure shell command help is consistent
 [x] check naming consistency across:
     - cli.py
     - shell.py
@@ -744,10 +744,10 @@ Tests / smoke
     - README if applicable
 
 [x] remove dead code from profile implementation
-[ ] remove unused imports
+[x] remove unused imports
 [x] remove stale comments from previous shell/profile drafts
-[ ] verify tests still describe intended behavior
-[ ] add/adjust tests only where behavior is already agreed
+[x] verify tests still describe intended behavior
+[x] add/adjust tests only where behavior is already agreed
 
 
 ### Rename project to local_ai
