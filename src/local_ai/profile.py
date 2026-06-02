@@ -35,8 +35,6 @@ KEY_ALIASES = {
     "preferred_session": "preferred_session",
     "preferred workspace": "preferred_workspace",
     "preferred_workspace": "preferred_workspace",
-    "shell prompt style": "shell_prompt_style",
-    "shell_prompt_style": "shell_prompt_style",
 }
 
 

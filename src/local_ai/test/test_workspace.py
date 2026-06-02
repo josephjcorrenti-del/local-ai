@@ -67,7 +67,7 @@ def test_prompt_get_with_workspace():
         }
     )
 
-    assert prompt == "owb:test-ws.default> "
+    assert prompt == "local-ai:test-ws.default> "
 
 def test_prompt_get_without_workspace():
     from local_ai.shell import _prompt_get
@@ -79,7 +79,7 @@ def test_prompt_get_without_workspace():
         }
     )
 
-    assert prompt == "owb:default> "
+    assert prompt == "local-ai:default> "
 
 
 def test_workspace_rejects_empty_name(tmp_path, monkeypatch):

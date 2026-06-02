@@ -125,7 +125,7 @@ def shell_line_run(
         return
 
     if stripped == "banner":
-        print("local_ai shell")
+        print("local-ai shell")
         print(f"profile: {state.get('profile') or '(none)'}")
         print(f"model: {state['model']}")
         print(f"workspace: {state.get('workspace') or '(none)'}")
@@ -255,7 +255,7 @@ def shell_command_run(
         "profile": profile["profile_key"] if profile else None,
     }
 
-    print("local_ai shell")
+    print("local-ai shell")
     if state.get("profile"):
         print(f"profile: {state['profile']}")
     print(f"model: {state['model']}")
@@ -317,9 +317,9 @@ def _prompt_get(state: dict[str, str]) -> str:
     session_name = state["session"]
 
     if workspace_name:
-        return f"owb:{workspace_name}.{session_name}> "
+        return f"local-ai:{workspace_name}.{session_name}> "
 
-    return f"owb:{session_name}> "
+    return f"local-ai:{session_name}> "
 
 
 def _profile_for_shell_get(profile_key: str | None) -> dict[str, object] | None:

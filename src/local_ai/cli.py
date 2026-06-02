@@ -638,7 +638,7 @@ def file_chat_command_run(args: argparse.Namespace) -> None:
 
 
 def shell_command_run(args: argparse.Namespace) -> None:
-    """Run an interactive local_ai shell."""
+    """Run an interactive local-ai shell."""
     shell_run(
         args,
         parser_build=parser_build,
@@ -909,7 +909,7 @@ COMMAND_HANDLERS: dict[str, Callable[[argparse.Namespace], None]] = {
 
 def parser_build() -> argparse.ArgumentParser:
     """Construct and return the CLI argument parser."""
-    parser = argparse.ArgumentParser(description="Ollama Workbench local CLI")
+    parser = argparse.ArgumentParser(description="Local AI CLI")
     parser.add_argument(
         "--debug",
         action="store_true",
@@ -1048,7 +1048,7 @@ def parser_build() -> argparse.ArgumentParser:
 
     p_shell = subparsers.add_parser(
         "shell",
-        help="Run interactive local_ai shell",
+        help="Run interactive local-ai shell",
     )
     p_shell.add_argument(
         "--small",

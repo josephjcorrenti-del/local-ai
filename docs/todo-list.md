@@ -735,7 +735,7 @@ Tests / smoke
 [ ] review docs/decisions.md for profile decisions
 [ ] ensure CLI command help is consistent
 [ ] ensure shell command help is consistent
-[ ] check naming consistency across:
+[x] check naming consistency across:
     - cli.py
     - shell.py
     - profile module
@@ -743,9 +743,9 @@ Tests / smoke
     - tests
     - README if applicable
 
-[ ] remove dead code from profile implementation
+[x] remove dead code from profile implementation
 [ ] remove unused imports
-[ ] remove stale comments from previous shell/profile drafts
+[x] remove stale comments from previous shell/profile drafts
 [ ] verify tests still describe intended behavior
 [ ] add/adjust tests only where behavior is already agreed
 
